@@ -97,6 +97,70 @@ class ChessState extends GameState {
     return -1; // Should never happen in a valid game
   }
 
+  /// Convert this state to a FEN string (for interop with the chess library).
+  String toFen() {
+    final sb = StringBuffer();
+
+    // Board (rank 8 to rank 1, which matches our row 0 to row 7)
+    for (int row = 0; row < 8; row++) {
+      int empty = 0;
+      for (int col = 0; col < 8; col++) {
+        final piece = board[row * 8 + col];
+        if (piece == null) {
+          empty++;
+        } else {
+          if (empty > 0) {
+            sb.write(empty);
+            empty = 0;
+          }
+          sb.write(_pieceToFenChar(piece));
+        }
+      }
+      if (empty > 0) sb.write(empty);
+      if (row < 7) sb.write('/');
+    }
+
+    // Active color
+    sb.write(' ');
+    sb.write(activeColor == ChessColor.white ? 'w' : 'b');
+
+    // Castling rights
+    sb.write(' ');
+    final c = StringBuffer();
+    if (castlingRights.whiteKingSide) c.write('K');
+    if (castlingRights.whiteQueenSide) c.write('Q');
+    if (castlingRights.blackKingSide) c.write('k');
+    if (castlingRights.blackQueenSide) c.write('q');
+    sb.write(c.isEmpty ? '-' : c.toString());
+
+    // En passant target
+    sb.write(' ');
+    if (enPassantTarget != null) {
+      sb.write(ChessMove.indexToAlgebraic(enPassantTarget!));
+    } else {
+      sb.write('-');
+    }
+
+    // Half-move clock and full-move number
+    sb.write(' $halfMoveClock');
+    sb.write(' $fullMoveNumber');
+
+    return sb.toString();
+  }
+
+  static String _pieceToFenChar(ChessPiece piece) {
+    const map = {
+      ChessPieceType.king: 'k',
+      ChessPieceType.queen: 'q',
+      ChessPieceType.rook: 'r',
+      ChessPieceType.bishop: 'b',
+      ChessPieceType.knight: 'n',
+      ChessPieceType.pawn: 'p',
+    };
+    final ch = map[piece.type]!;
+    return piece.color == ChessColor.white ? ch.toUpperCase() : ch;
+  }
+
   /// Create a copy with modifications.
   ChessState copyWith({
     List<ChessPiece?>? board,
@@ -144,18 +208,111 @@ class ChessState extends GameState {
 
   @override
   Map<String, dynamic> toMap() => {
-        'board': board.map((p) => p?.toMap()).toList(),
-        'activeColor': activeColor.name,
-        'castlingRights': castlingRights.toMap(),
-        'enPassantTarget': enPassantTarget,
-        'halfMoveClock': halfMoveClock,
-        'fullMoveNumber': fullMoveNumber,
+        'fen': toFen(),
         'isInCheck': isInCheck,
         'isGameOver': _isGameOver,
         'winner': winner?.name,
       };
 
+  /// Create a [ChessState] from a FEN string plus game metadata.
+  factory ChessState.fromFen(
+    String fen, {
+    bool isInCheck = false,
+    bool isGameOver = false,
+    ChessColor? winner,
+  }) {
+    final parts = fen.split(' ');
+
+    // Parse board
+    final board = _parseFenBoard(parts[0]);
+
+    // Active color
+    final activeColor =
+        parts[1] == 'w' ? ChessColor.white : ChessColor.black;
+
+    // Castling rights
+    final castlingStr = parts[2];
+    final castlingRights = CastlingRights(
+      whiteKingSide: castlingStr.contains('K'),
+      whiteQueenSide: castlingStr.contains('Q'),
+      blackKingSide: castlingStr.contains('k'),
+      blackQueenSide: castlingStr.contains('q'),
+    );
+
+    // En passant target
+    int? enPassantTarget;
+    if (parts[3] != '-') {
+      enPassantTarget = ChessMove.algebraicToIndex(parts[3]);
+    }
+
+    // Clocks
+    final halfMoveClock = int.parse(parts[4]);
+    final fullMoveNumber = int.parse(parts[5]);
+
+    return ChessState(
+      board: board,
+      activeColor: activeColor,
+      castlingRights: castlingRights,
+      enPassantTarget: enPassantTarget,
+      halfMoveClock: halfMoveClock,
+      fullMoveNumber: fullMoveNumber,
+      isInCheck: isInCheck,
+      isGameOver: isGameOver,
+      winner: winner,
+    );
+  }
+
+  /// Parse the board portion of a FEN string into our 64-square array.
+  static List<ChessPiece?> _parseFenBoard(String boardStr) {
+    final board = List<ChessPiece?>.filled(64, null);
+    final rows = boardStr.split('/');
+
+    for (int row = 0; row < 8; row++) {
+      int col = 0;
+      for (int i = 0; i < rows[row].length; i++) {
+        final ch = rows[row][i];
+        final digit = int.tryParse(ch);
+        if (digit != null) {
+          col += digit;
+        } else {
+          board[row * 8 + col] = _fenCharToPiece(ch);
+          col++;
+        }
+      }
+    }
+
+    return board;
+  }
+
+  /// Convert a FEN piece character to a [ChessPiece].
+  static ChessPiece _fenCharToPiece(String ch) {
+    final color = ch == ch.toUpperCase() ? ChessColor.white : ChessColor.black;
+    const typeMap = {
+      'k': ChessPieceType.king,
+      'q': ChessPieceType.queen,
+      'r': ChessPieceType.rook,
+      'b': ChessPieceType.bishop,
+      'n': ChessPieceType.knight,
+      'p': ChessPieceType.pawn,
+    };
+    final type = typeMap[ch.toLowerCase()]!;
+    return ChessPiece(type, color);
+  }
+
   factory ChessState.fromMap(Map<String, dynamic> map) {
+    // Compact FEN-based format
+    if (map.containsKey('fen')) {
+      return ChessState.fromFen(
+        map['fen'] as String,
+        isInCheck: map['isInCheck'] as bool? ?? false,
+        isGameOver: map['isGameOver'] as bool? ?? false,
+        winner: map['winner'] != null
+            ? ChessColor.values.byName(map['winner'] as String)
+            : null,
+      );
+    }
+
+    // Legacy verbose format (backward compatibility)
     final boardList = (map['board'] as List).map((item) {
       if (item == null) return null;
       return ChessPiece.fromMap(Map<String, dynamic>.from(item as Map));

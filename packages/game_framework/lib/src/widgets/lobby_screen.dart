@@ -119,9 +119,13 @@ class _LobbyScreenState extends State<LobbyScreen>
     _deviceLostSub?.cancel();
     _connectionSub?.cancel();
     _errorSub?.cancel();
-    // Clean up BLE state when leaving lobby
-    widget.bleService.stopScanning().catchError((_) {});
-    widget.bleService.stopHosting().catchError((_) {});
+    // Only clean up BLE if NOT connected.
+    // If connected, the game screen now owns the BLE connection —
+    // tearing down hosting/scanning would kill the active GATT service.
+    if (!widget.bleService.isConnected) {
+      widget.bleService.stopScanning().catchError((_) {});
+      widget.bleService.stopHosting().catchError((_) {});
+    }
     super.dispose();
   }
 

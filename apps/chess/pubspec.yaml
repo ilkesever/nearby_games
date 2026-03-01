@@ -1,4 +1,4 @@
-name: chess
+name: chess_app
 description: Nearby multiplayer chess game using BLE.
 publish_to: none
 version: 1.0.0
@@ -13,6 +13,7 @@ dependencies:
     path: ../../packages/nearby_ble
   game_framework:
     path: ../../packages/game_framework
+  chess: ^0.8.1
   cupertino_icons: ^1.0.8
 
 dev_dependencies:

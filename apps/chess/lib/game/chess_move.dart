@@ -19,17 +19,17 @@ class ChessMove {
   factory ChessMove.fromAlgebraic(String fromSq, String toSq,
       {ChessPieceType? promotion}) {
     return ChessMove(
-      from: _algebraicToIndex(fromSq),
-      to: _algebraicToIndex(toSq),
+      from: algebraicToIndex(fromSq),
+      to: algebraicToIndex(toSq),
       promotion: promotion,
     );
   }
 
   /// Get algebraic notation for the from-square.
-  String get fromAlgebraic => _indexToAlgebraic(from);
+  String get fromAlgebraic => indexToAlgebraic(from);
 
   /// Get algebraic notation for the to-square.
-  String get toAlgebraic => _indexToAlgebraic(to);
+  String get toAlgebraic => indexToAlgebraic(to);
 
   int get fromRow => from ~/ 8;
   int get fromCol => from % 8;
@@ -64,13 +64,15 @@ class ChessMove {
   @override
   String toString() => '$fromAlgebraic→$toAlgebraic';
 
-  static int _algebraicToIndex(String sq) {
+  /// Convert algebraic notation (e.g. "e2") to board index (0-63).
+  static int algebraicToIndex(String sq) {
     final col = sq.codeUnitAt(0) - 'a'.codeUnitAt(0);
     final row = 8 - int.parse(sq[1]);
     return row * 8 + col;
   }
 
-  static String _indexToAlgebraic(int index) {
+  /// Convert board index (0-63) to algebraic notation (e.g. "e2").
+  static String indexToAlgebraic(int index) {
     final col = String.fromCharCode('a'.codeUnitAt(0) + (index % 8));
     final row = 8 - (index ~/ 8);
     return '$col$row';

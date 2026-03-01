@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - nearby_ble (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - nearby_ble (from `.symlinks/plugins/nearby_ble/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  nearby_ble:
+    :path: ".symlinks/plugins/nearby_ble/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  nearby_ble: 4bf1da8d71d09fed51228b1e68906f658bcd0e34
+
+PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865
+
+COCOAPODS: 1.16.2

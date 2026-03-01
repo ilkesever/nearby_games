@@ -4,7 +4,9 @@ import 'dart:typed_data';
 /// A message sent over BLE between connected devices.
 ///
 /// Messages are serialized to JSON, then to bytes for BLE transport.
-/// The [BleService] handles chunking for messages that exceed MTU size.
+/// The native platform plugins (iOS/Android) handle chunking and reassembly
+/// for messages that exceed the negotiated BLE MTU size using a 4-byte
+/// chunk header protocol: [0xAA magic, messageId, chunkIndex, totalChunks].
 class BleMessage {
   /// Protocol version for forward compatibility.
   static const int protocolVersion = 1;

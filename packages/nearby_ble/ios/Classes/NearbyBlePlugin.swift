@@ -43,8 +43,15 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
     private var isHosting = false
     private var isScanning = false
 
-    // Message reassembly buffer (for chunked messages)
-    private var receiveBuffer = Data()
+    // Message chunking/reassembly
+    /// Magic byte prefix for chunked messages (0xAA is not valid UTF-8 start for JSON).
+    private static let chunkMagic: UInt8 = 0xAA
+    /// Header size: [magic(1), messageId(1), chunkIndex(1), totalChunks(1)] = 4 bytes.
+    private static let chunkHeaderSize = 4
+    /// Wrapping message ID counter for outgoing chunked messages.
+    private var outgoingMessageId: UInt8 = 0
+    /// Reassembly buffer: messageId -> (totalChunks, receivedChunks dict)
+    private var reassemblyBuffer: [UInt8: (total: UInt8, chunks: [UInt8: Data])] = [:]
 
     // MARK: - Plugin Registration
 
@@ -255,6 +262,9 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
 
     // MARK: - Messaging
 
+    // Notification queue for host side (retry when updateValue returns false)
+    private var pendingNotifications: [Data] = []
+
     private func sendMessage(args: [String: Any], result: @escaping FlutterResult) {
         guard let dataString = args["data"] as? String,
               let data = dataString.data(using: .utf8) else {
@@ -264,40 +274,131 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
             return
         }
 
+        print("📤 [iOS] sendMessage: \(data.count) bytes, isHosting=\(isHosting)")
+
         if isHosting {
             // Host sends via notification to subscribed centrals
             guard let char = messageChar, !subscribedCentrals.isEmpty else {
+                print("❌ [iOS] sendMessage: No connected client (char=\(messageChar != nil), subs=\(subscribedCentrals.count))")
                 result(FlutterError(code: "BLE_SEND_FAILED",
                                   message: "No connected client",
                                   details: nil))
                 return
             }
 
-            let sent = peripheralManager?.updateValue(
-                data,
-                for: char,
-                onSubscribedCentrals: subscribedCentrals
-            )
+            // Determine max payload for notifications: use first subscribed central's MTU
+            let mtu = subscribedCentrals.first?.maximumUpdateValueLength ?? 182
+            let chunks = chunkData(data, maxPayload: mtu)
+            print("📤 [iOS] Host sending \(chunks.count) chunk(s), MTU=\(mtu), subscribers=\(subscribedCentrals.count)")
 
-            if sent == true {
-                result(nil)
-            } else {
-                // Queue is full, will retry when peripheralManagerIsReady is called
-                result(nil) // Still succeed — data is queued
+            for chunk in chunks {
+                let sent = peripheralManager?.updateValue(
+                    chunk,
+                    for: char,
+                    onSubscribedCentrals: subscribedCentrals
+                ) ?? false
+                if !sent {
+                    // Queue is full — buffer remaining chunks for retry in peripheralManagerIsReady
+                    print("⚠️ [iOS] updateValue returned false (queue full), buffering for retry")
+                    pendingNotifications.append(chunk)
+                } else {
+                    print("📤 [iOS] Notification sent: \(chunk.count) bytes")
+                }
             }
+            result(nil)
         } else {
             // Joiner sends via write to the message characteristic
             guard let peripheral = connectedPeripheral,
                   let characteristic = messageCharacteristic else {
+                print("❌ [iOS] sendMessage: Not connected (peripheral=\(connectedPeripheral != nil), char=\(messageCharacteristic != nil))")
                 result(FlutterError(code: "BLE_SEND_FAILED",
                                   message: "Not connected",
                                   details: nil))
                 return
             }
 
-            peripheral.writeValue(data, for: characteristic, type: .withResponse)
+            // For write-with-response, CoreBluetooth handles ATT segmentation,
+            // but we chunk to stay within the negotiated MTU for reliability.
+            let mtu = peripheral.maximumWriteValueLength(for: .withResponse)
+            let chunks = chunkData(data, maxPayload: mtu)
+            print("📤 [iOS] Joiner sending \(chunks.count) chunk(s), MTU=\(mtu)")
+
+            for chunk in chunks {
+                peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
+            }
             result(nil)
         }
+    }
+
+    // MARK: - Chunking Helpers
+
+    /// Split data into chunks if it exceeds maxPayload bytes.
+    /// Single-packet messages are sent as-is (no header overhead).
+    /// Multi-packet messages get a 4-byte header: [0xAA, messageId, chunkIndex, totalChunks].
+    private func chunkData(_ data: Data, maxPayload: Int) -> [Data] {
+        if data.count <= maxPayload {
+            // Fits in a single packet — send as-is, no chunking header
+            return [data]
+        }
+
+        let msgId = outgoingMessageId
+        outgoingMessageId = outgoingMessageId &+ 1
+
+        let chunkPayloadSize = maxPayload - NearbyBlePlugin.chunkHeaderSize
+        guard chunkPayloadSize > 0 else { return [data] }
+
+        let totalChunks = (data.count + chunkPayloadSize - 1) / chunkPayloadSize
+        guard totalChunks <= 255 else {
+            // Message too large even for chunking — send raw and hope for the best
+            return [data]
+        }
+
+        var chunks: [Data] = []
+        for i in 0..<totalChunks {
+            let start = i * chunkPayloadSize
+            let end = min(start + chunkPayloadSize, data.count)
+            var chunk = Data([NearbyBlePlugin.chunkMagic, msgId, UInt8(i), UInt8(totalChunks)])
+            chunk.append(data[start..<end])
+            chunks.append(chunk)
+        }
+        return chunks
+    }
+
+    /// Process received data — either a complete message or a chunk to reassemble.
+    /// Returns the complete JSON string when a full message is available, or nil if still buffering.
+    private func reassembleOrComplete(_ data: Data) -> String? {
+        // Check if this is a chunked message (starts with magic byte)
+        if data.count >= NearbyBlePlugin.chunkHeaderSize && data[0] == NearbyBlePlugin.chunkMagic {
+            let msgId = data[1]
+            let chunkIndex = data[2]
+            let totalChunks = data[3]
+            let payload = data.subdata(in: NearbyBlePlugin.chunkHeaderSize..<data.count)
+
+            // Initialize buffer for this message ID if needed
+            if reassemblyBuffer[msgId] == nil {
+                reassemblyBuffer[msgId] = (total: totalChunks, chunks: [:])
+            }
+
+            reassemblyBuffer[msgId]?.chunks[chunkIndex] = payload
+
+            // Check if all chunks received
+            if let entry = reassemblyBuffer[msgId],
+               entry.chunks.count == Int(entry.total) {
+                // Reassemble in order
+                var fullData = Data()
+                for i in 0..<entry.total {
+                    if let chunk = entry.chunks[i] {
+                        fullData.append(chunk)
+                    }
+                }
+                reassemblyBuffer.removeValue(forKey: msgId)
+                return String(data: fullData, encoding: .utf8)
+            }
+            return nil // Still waiting for more chunks
+        }
+
+        // Not chunked — complete single-packet message
+        return String(data: data, encoding: .utf8)
     }
 
     // MARK: - Event Helpers
@@ -414,9 +515,9 @@ extension NearbyBlePlugin: CBPeripheralDelegate {
                            didUpdateValueFor characteristic: CBCharacteristic,
                            error: Error?) {
         if characteristic.uuid == NearbyBlePlugin.messageCharUUID {
-            // Received a message from host
+            // Received a message (or chunk) from host
             if let data = characteristic.value,
-               let jsonString = String(data: data, encoding: .utf8) {
+               let jsonString = reassembleOrComplete(data) {
                 sendEvent([
                     "event": "message",
                     "data": jsonString
@@ -540,7 +641,7 @@ extension NearbyBlePlugin: CBPeripheralManagerDelegate {
         for request in requests {
             if request.characteristic.uuid == NearbyBlePlugin.messageCharUUID {
                 if let data = request.value,
-                   let jsonString = String(data: data, encoding: .utf8) {
+                   let jsonString = reassembleOrComplete(data) {
                     sendEvent([
                         "event": "message",
                         "data": jsonString
@@ -568,8 +669,27 @@ extension NearbyBlePlugin: CBPeripheralManagerDelegate {
     }
 
     public func peripheralManagerIsReady(toUpdateSubscribers peripheral: CBPeripheralManager) {
-        // Called when the transmit queue has space again.
-        // In a production app, we'd retry queued messages here.
+        // Called when the transmit queue has space again — retry pending notifications.
+        guard let char = messageChar, !pendingNotifications.isEmpty else { return }
+
+        print("📤 [iOS] peripheralManagerIsReady: retrying \(pendingNotifications.count) pending notification(s)")
+
+        while !pendingNotifications.isEmpty {
+            let chunk = pendingNotifications[0]
+            let sent = peripheral.updateValue(
+                chunk,
+                for: char,
+                onSubscribedCentrals: subscribedCentrals
+            )
+            if sent {
+                pendingNotifications.removeFirst()
+                print("📤 [iOS] Retry notification sent: \(chunk.count) bytes, \(pendingNotifications.count) remaining")
+            } else {
+                // Still full, will be called again when ready
+                print("⚠️ [iOS] Retry still blocked, \(pendingNotifications.count) remaining")
+                break
+            }
+        }
     }
 }
 

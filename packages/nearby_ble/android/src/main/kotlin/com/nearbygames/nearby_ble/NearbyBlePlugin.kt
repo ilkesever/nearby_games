@@ -46,6 +46,14 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
 
         // Client Characteristic Configuration Descriptor UUID (standard)
         val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+
+        // Message chunking constants
+        /** Magic byte prefix for chunked messages (0xAA is not valid UTF-8 start for JSON). */
+        const val CHUNK_MAGIC: Byte = 0xAA.toByte()
+        /** Header size: [magic(1), messageId(1), chunkIndex(1), totalChunks(1)] = 4 bytes. */
+        const val CHUNK_HEADER_SIZE = 4
+        /** Default MTU payload (conservative: 185 - 3 ATT overhead). */
+        const val DEFAULT_MAX_PAYLOAD = 182
     }
 
     // Flutter channels
@@ -86,6 +94,22 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
     private var pendingPermissionResult: Result? = null
 
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    // Message chunking/reassembly
+    /** Wrapping message ID counter for outgoing chunked messages. */
+    private var outgoingMessageId: Byte = 0
+    /** Reassembly buffer: messageId -> (totalChunks, receivedChunks map). */
+    private val reassemblyBuffer = mutableMapOf<Byte, Pair<Int, MutableMap<Int, ByteArray>>>()
+    /** Negotiated MTU (updated via onMtuChanged). Start conservative — actual default is 23-3=20 bytes. */
+    private var negotiatedMtu: Int = 20
+
+    // Write queue for sequential BLE writes (only one can be in-flight at a time)
+    private val writeQueue: ArrayDeque<ByteArray> = ArrayDeque()
+    private var isWriteInFlight = false
+
+    // Notification queue for sequential BLE notifications (host side)
+    private val notifyQueue: ArrayDeque<ByteArray> = ArrayDeque()
+    private var isNotifyInFlight = false
 
     // ========================================================================
     // FlutterPlugin lifecycle
@@ -358,11 +382,17 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
             offset: Int, value: ByteArray?
         ) {
             if (characteristic.uuid == MESSAGE_CHAR_UUID && value != null) {
-                val jsonString = String(value, StandardCharsets.UTF_8)
-                sendEvent(mapOf(
-                    "event" to "message",
-                    "data" to jsonString
-                ))
+                Log.d(TAG, "📥 Host received write: ${value.size} bytes from ${device.address}")
+                val jsonString = reassembleOrComplete(value)
+                if (jsonString != null) {
+                    Log.d(TAG, "📥 Host message complete: ${jsonString.length} chars")
+                    sendEvent(mapOf(
+                        "event" to "message",
+                        "data" to jsonString
+                    ))
+                } else {
+                    Log.d(TAG, "📥 Host chunk buffered, waiting for more...")
+                }
 
                 if (responseNeeded) {
                     gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null)
@@ -370,6 +400,11 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
             } else if (responseNeeded) {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, 0, null)
             }
+        }
+
+        override fun onMtuChanged(device: BluetoothDevice, mtu: Int) {
+            negotiatedMtu = mtu - 3 // ATT overhead
+            Log.d(TAG, "Host MTU changed to $mtu, payload size: $negotiatedMtu")
         }
 
         override fun onDescriptorWriteRequest(
@@ -547,29 +582,43 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
     private val gattClientCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "Connected to GATT server, discovering services...")
-                gatt.discoverServices()
+                Log.d(TAG, "📶 Connected to GATT server, requesting MTU...")
+                // Request larger MTU first, then discover services in onMtuChanged
+                if (!gatt.requestMtu(517)) {
+                    Log.w(TAG, "⚠️ requestMtu failed, falling back to service discovery with default MTU")
+                    gatt.discoverServices()
+                }
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.d(TAG, "📶 Disconnected from GATT server")
                 connectedGatt = null
                 messageCharacteristic = null
+                writeQueue.clear()
+                isWriteInFlight = false
                 sendEvent(mapOf("event" to "disconnected"))
             }
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                pendingConnectResult?.error("BLE_CONNECTION_FAILED", "Service discovery failed", null)
-                pendingConnectResult = null
+                Log.e(TAG, "❌ Service discovery failed with status $status")
+                mainHandler.post {
+                    pendingConnectResult?.error("BLE_CONNECTION_FAILED", "Service discovery failed", null)
+                    pendingConnectResult = null
+                }
                 return
             }
 
             val service = gatt.getService(SERVICE_UUID)
             if (service == null) {
-                pendingConnectResult?.error("BLE_CONNECTION_FAILED", "Game service not found", null)
-                pendingConnectResult = null
+                Log.e(TAG, "❌ Game service not found")
+                mainHandler.post {
+                    pendingConnectResult?.error("BLE_CONNECTION_FAILED", "Game service not found", null)
+                    pendingConnectResult = null
+                }
                 return
             }
 
+            Log.d(TAG, "✅ Services discovered, setting up characteristics...")
             messageCharacteristic = service.getCharacteristic(MESSAGE_CHAR_UUID)
             val playerInfoChar = service.getCharacteristic(PLAYER_INFO_CHAR_UUID)
 
@@ -626,10 +675,28 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
             if (characteristic.uuid == MESSAGE_CHAR_UUID) {
                 val data = characteristic.value
                 if (data != null) {
-                    val jsonString = String(data, StandardCharsets.UTF_8)
-                    sendEvent(mapOf("event" to "message", "data" to jsonString))
+                    Log.d(TAG, "📥 Joiner received notification: ${data.size} bytes")
+                    val jsonString = reassembleOrComplete(data)
+                    if (jsonString != null) {
+                        Log.d(TAG, "📥 Joiner message complete: ${jsonString.length} chars")
+                        sendEvent(mapOf("event" to "message", "data" to jsonString))
+                    } else {
+                        Log.d(TAG, "📥 Joiner chunk buffered, waiting for more...")
+                    }
                 }
             }
+        }
+
+        override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                negotiatedMtu = mtu - 3 // ATT overhead
+                Log.d(TAG, "✅ Client MTU negotiated: $mtu bytes, payload size: $negotiatedMtu")
+            } else {
+                Log.w(TAG, "⚠️ MTU negotiation failed (status $status), using default MTU=$negotiatedMtu")
+            }
+            // Now discover services (we requested MTU before discovery)
+            Log.d(TAG, "📶 Discovering services...")
+            gatt.discoverServices()
         }
 
         override fun onCharacteristicWrite(
@@ -638,11 +705,19 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
             status: Int
         ) {
             if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e(TAG, "❌ Write failed with status $status, queue size: ${writeQueue.size}")
+                writeQueue.clear()
+                isWriteInFlight = false
                 sendEvent(mapOf(
                     "event" to "error",
                     "code" to "BLE_SEND_FAILED",
                     "message" to "Write failed with status $status"
                 ))
+            } else {
+                Log.d(TAG, "✅ Write succeeded, remaining in queue: ${writeQueue.size}")
+                // Process next chunk in the queue
+                isWriteInFlight = false
+                processWriteQueue()
             }
         }
     }
@@ -658,35 +733,190 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
         }
 
         val data = dataString.toByteArray(StandardCharsets.UTF_8)
+        Log.d(TAG, "📤 sendMessage: ${data.size} bytes, isHosting=$isHosting, mtu=$negotiatedMtu")
 
         if (isHosting) {
-            // Host sends via notification
+            // Host sends via notification to subscribed centrals
             val service = gattServer?.getService(SERVICE_UUID) ?: run {
+                Log.e(TAG, "❌ sendMessage: Service not available")
                 result.error("BLE_SEND_FAILED", "Service not available", null)
                 return
             }
             val char = service.getCharacteristic(MESSAGE_CHAR_UUID) ?: run {
+                Log.e(TAG, "❌ sendMessage: Characteristic not available")
                 result.error("BLE_SEND_FAILED", "Characteristic not available", null)
                 return
             }
 
-            char.value = data
-            for (device in subscribedDevices) {
-                gattServer?.notifyCharacteristicChanged(device, char, false)
+            if (subscribedDevices.isEmpty()) {
+                Log.e(TAG, "❌ sendMessage: No subscribed devices")
+                result.error("BLE_SEND_FAILED", "No connected client", null)
+                return
             }
+
+            val chunks = chunkData(data, negotiatedMtu)
+            Log.d(TAG, "📤 Host sending ${chunks.size} chunk(s) to ${subscribedDevices.size} device(s)")
+
+            // Queue notifications and send sequentially
+            for (chunk in chunks) {
+                notifyQueue.addLast(chunk)
+            }
+            processNotifyQueue()
             result.success(null)
         } else {
-            // Joiner writes to the characteristic
+            // Joiner writes to the message characteristic
             val char = messageCharacteristic ?: run {
+                Log.e(TAG, "❌ sendMessage: Not connected (no messageCharacteristic)")
                 result.error("BLE_SEND_FAILED", "Not connected", null)
                 return
             }
 
-            char.value = data
-            char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            connectedGatt?.writeCharacteristic(char)
+            if (connectedGatt == null) {
+                Log.e(TAG, "❌ sendMessage: Not connected (no connectedGatt)")
+                result.error("BLE_SEND_FAILED", "Not connected", null)
+                return
+            }
+
+            val chunks = chunkData(data, negotiatedMtu)
+            Log.d(TAG, "📤 Joiner sending ${chunks.size} chunk(s)")
+
+            // Queue writes and send sequentially (one at a time)
+            for (chunk in chunks) {
+                writeQueue.addLast(chunk)
+            }
+            processWriteQueue()
             result.success(null)
         }
+    }
+
+    /** Process the next pending write from the queue (joiner → host). */
+    private fun processWriteQueue() {
+        if (isWriteInFlight || writeQueue.isEmpty()) return
+
+        val chunk = writeQueue.removeFirst()
+        val char = messageCharacteristic ?: run {
+            Log.e(TAG, "❌ processWriteQueue: messageCharacteristic is null, dropping ${writeQueue.size + 1} chunks")
+            writeQueue.clear()
+            return
+        }
+        val gatt = connectedGatt ?: run {
+            Log.e(TAG, "❌ processWriteQueue: connectedGatt is null, dropping ${writeQueue.size + 1} chunks")
+            writeQueue.clear()
+            return
+        }
+
+        isWriteInFlight = true
+        char.value = chunk
+        char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        val success = gatt.writeCharacteristic(char)
+        if (!success) {
+            Log.e(TAG, "❌ writeCharacteristic returned false, dropping remaining ${writeQueue.size} chunks")
+            isWriteInFlight = false
+            writeQueue.clear()
+            sendEvent(mapOf(
+                "event" to "error",
+                "code" to "BLE_SEND_FAILED",
+                "message" to "writeCharacteristic returned false"
+            ))
+        } else {
+            Log.d(TAG, "📤 Write in flight: ${chunk.size} bytes, ${writeQueue.size} remaining")
+        }
+    }
+
+    /** Process the next pending notification from the queue (host → joiner). */
+    private fun processNotifyQueue() {
+        val service = gattServer?.getService(SERVICE_UUID) ?: return
+        val char = service.getCharacteristic(MESSAGE_CHAR_UUID) ?: return
+
+        while (notifyQueue.isNotEmpty()) {
+            val chunk = notifyQueue.removeFirst()
+            char.value = chunk
+            var allSent = true
+            for (device in subscribedDevices) {
+                val sent = gattServer?.notifyCharacteristicChanged(device, char, false) ?: false
+                if (!sent) {
+                    Log.w(TAG, "⚠️ notifyCharacteristicChanged returned false (queue full), re-queuing")
+                    // Put it back at the front and wait for peripheralManagerIsReady equivalent
+                    notifyQueue.addFirst(chunk)
+                    allSent = false
+                    // On Android, notifyCharacteristicChanged returns false when busy.
+                    // We'll retry after a short delay.
+                    mainHandler.postDelayed({ processNotifyQueue() }, 50)
+                    return
+                }
+            }
+            if (allSent) {
+                Log.d(TAG, "📤 Notification sent: ${chunk.size} bytes, ${notifyQueue.size} remaining")
+            }
+        }
+    }
+
+    // ========================================================================
+    // Chunking Helpers
+    // ========================================================================
+
+    /**
+     * Split data into chunks if it exceeds maxPayload bytes.
+     * Single-packet messages are sent as-is (no header overhead).
+     * Multi-packet messages get a 4-byte header: [0xAA, messageId, chunkIndex, totalChunks].
+     */
+    private fun chunkData(data: ByteArray, maxPayload: Int): List<ByteArray> {
+        if (data.size <= maxPayload) {
+            return listOf(data)
+        }
+
+        val msgId = outgoingMessageId
+        outgoingMessageId = (outgoingMessageId + 1).toByte()
+
+        val chunkPayloadSize = maxPayload - CHUNK_HEADER_SIZE
+        if (chunkPayloadSize <= 0) return listOf(data)
+
+        val totalChunks = (data.size + chunkPayloadSize - 1) / chunkPayloadSize
+        if (totalChunks > 255) return listOf(data)
+
+        val chunks = mutableListOf<ByteArray>()
+        for (i in 0 until totalChunks) {
+            val start = i * chunkPayloadSize
+            val end = minOf(start + chunkPayloadSize, data.size)
+            val header = byteArrayOf(CHUNK_MAGIC, msgId, i.toByte(), totalChunks.toByte())
+            chunks.add(header + data.copyOfRange(start, end))
+        }
+        return chunks
+    }
+
+    /**
+     * Process received data — either a complete message or a chunk to reassemble.
+     * Returns the complete JSON string when a full message is available, or null if still buffering.
+     */
+    private fun reassembleOrComplete(data: ByteArray): String? {
+        if (data.size >= CHUNK_HEADER_SIZE && data[0] == CHUNK_MAGIC) {
+            val msgId = data[1]
+            val chunkIndex = data[2].toInt() and 0xFF
+            val totalChunks = data[3].toInt() and 0xFF
+            val payload = data.copyOfRange(CHUNK_HEADER_SIZE, data.size)
+
+            val entry = reassemblyBuffer.getOrPut(msgId) {
+                Pair(totalChunks, mutableMapOf())
+            }
+            entry.second[chunkIndex] = payload
+
+            if (entry.second.size == entry.first) {
+                // All chunks received — reassemble in order
+                val fullData = ByteArray(entry.second.values.sumOf { it.size })
+                var offset = 0
+                for (i in 0 until entry.first) {
+                    val chunk = entry.second[i] ?: continue
+                    System.arraycopy(chunk, 0, fullData, offset, chunk.size)
+                    offset += chunk.size
+                }
+                reassemblyBuffer.remove(msgId)
+                return String(fullData, StandardCharsets.UTF_8)
+            }
+            return null // Still waiting for more chunks
+        }
+
+        // Not chunked — complete single-packet message
+        return String(data, StandardCharsets.UTF_8)
     }
 
     // ========================================================================

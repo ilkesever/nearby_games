@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:game_framework/game_framework.dart';
-import 'package:chess/game/chess_engine.dart';
-import 'package:chess/game/chess_move.dart';
-import 'package:chess/game/chess_state.dart';
+import 'package:chess_app/game/chess_engine.dart';
+import 'package:chess_app/game/chess_move.dart';
+import 'package:chess_app/game/chess_state.dart';
 
 void main() {
   late ChessEngine engine;

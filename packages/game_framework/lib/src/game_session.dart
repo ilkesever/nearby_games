@@ -159,17 +159,22 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
   ///
   /// Returns true if the move was valid and applied.
   bool makeMove(TMove move) {
+    debugPrint('🎮 [Session] makeMove: $move, isPlaying=$isPlaying, isMyTurn=$isMyTurn, activePlayer=${_state.activePlayerIndex}, localIndex=${_localPlayer?.index}');
+
     if (!isPlaying) {
+      debugPrint('🎮 [Session] makeMove BLOCKED: game not in progress (status=$_status)');
       _errorController.add('Game is not in progress');
       return false;
     }
 
     if (!isMyTurn) {
+      debugPrint('🎮 [Session] makeMove BLOCKED: not my turn');
       _errorController.add('Not your turn');
       return false;
     }
 
     if (!engine.isValidMove(_state, move)) {
+      debugPrint('🎮 [Session] makeMove BLOCKED: invalid move');
       _errorController.add('Invalid move');
       return false;
     }
@@ -178,6 +183,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
     _applyMove(move);
 
     // Send the move to the remote player
+    debugPrint('🎮 [Session] sending move to remote: $move');
     bleService.sendMove(engine.serializeMove(move));
 
     // Check for game over
@@ -275,6 +281,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
   }
 
   void _handleMessage(BleMessage message) {
+    debugPrint('🎮 [Session] handleMessage: type=${message.type.name} seq=${message.seq}');
     switch (message.type) {
       case BleMessageType.move:
         _handleRemoteMove(message.payload);
@@ -332,11 +339,14 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
   }
 
   void _handleRemoteMove(Map<String, dynamic> payload) {
+    debugPrint('🎮 [Session] handleRemoteMove: payload=$payload');
     try {
       final move = engine.deserializeMove(payload);
+      debugPrint('🎮 [Session] remote move deserialized: $move');
 
       // Validate the remote move
       if (!engine.isValidMove(_state, move)) {
+        debugPrint('🎮 [Session] ❌ remote move INVALID, requesting state sync');
         _errorController.add('Received invalid move from opponent');
         // Request state sync
         bleService.sendTyped(BleMessageType.stateSync, {
@@ -346,6 +356,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
       }
 
       // Apply the remote move
+      debugPrint('🎮 [Session] ✅ remote move applied: $move');
       _applyMove(move);
 
       // Check for game over
@@ -353,6 +364,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
         _updateStatus(GameSessionStatus.gameOver);
       }
     } catch (e) {
+      debugPrint('🎮 [Session] ❌ Failed to process remote move: $e');
       _errorController.add('Failed to process remote move: $e');
     }
   }

@@ -35,7 +35,7 @@ class BleConnection {
   factory BleConnection.fromMap(Map<String, dynamic> map) => BleConnection(
         sessionId: map['sessionId'] as String,
         remoteDevice:
-            BleDevice.fromMap(map['remoteDevice'] as Map<String, dynamic>),
+            BleDevice.fromMap(Map<String, dynamic>.from(map['remoteDevice'] as Map)),
         localRole: BleRole.values.byName(map['localRole'] as String),
         connectedAt: DateTime.parse(map['connectedAt'] as String),
       );
