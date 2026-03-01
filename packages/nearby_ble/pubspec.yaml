@@ -1,0 +1,27 @@
+name: nearby_ble
+description: Cross-platform BLE-based nearby communication plugin for peer-to-peer multiplayer games. Works iOS↔Android without internet.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.nearbygames.nearby_ble
+        pluginClass: NearbyBlePlugin
+      ios:
+        pluginClass: NearbyBlePlugin

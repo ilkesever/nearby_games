@@ -1,0 +1,19 @@
+name: game_framework
+description: Shared framework for turn-based multiplayer games over BLE. Provides abstract game engine, session management, and reusable lobby UI.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  nearby_ble:
+    path: ../nearby_ble
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
