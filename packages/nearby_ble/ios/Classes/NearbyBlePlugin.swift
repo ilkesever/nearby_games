@@ -35,6 +35,9 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
     private var connectedCentral: CBCentral?
     private var subscribedCentrals: [CBCentral] = []
 
+    // BLE dispatch queue — avoids blocking the main/UI thread
+    private let bleQueue = DispatchQueue(label: "com.nearbygames.ble", qos: .userInitiated)
+
     // State
     private var localPlayerName: String = "Player"
     private var gameType: String = ""
@@ -107,8 +110,8 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
     // MARK: - Initialize
 
     private func initialize(result: @escaping FlutterResult) {
-        centralManager = CBCentralManager(delegate: self, queue: nil)
-        peripheralManager = CBPeripheralManager(delegate: self, queue: nil)
+        centralManager = CBCentralManager(delegate: self, queue: bleQueue)
+        peripheralManager = CBPeripheralManager(delegate: self, queue: bleQueue)
         result(nil)
     }
 
@@ -274,12 +277,9 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
             return
         }
 
-        print("📤 [iOS] sendMessage: \(data.count) bytes, isHosting=\(isHosting)")
-
         if isHosting {
             // Host sends via notification to subscribed centrals
             guard let char = messageChar, !subscribedCentrals.isEmpty else {
-                print("❌ [iOS] sendMessage: No connected client (char=\(messageChar != nil), subs=\(subscribedCentrals.count))")
                 result(FlutterError(code: "BLE_SEND_FAILED",
                                   message: "No connected client",
                                   details: nil))
@@ -289,7 +289,6 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
             // Determine max payload for notifications: use first subscribed central's MTU
             let mtu = subscribedCentrals.first?.maximumUpdateValueLength ?? 182
             let chunks = chunkData(data, maxPayload: mtu)
-            print("📤 [iOS] Host sending \(chunks.count) chunk(s), MTU=\(mtu), subscribers=\(subscribedCentrals.count)")
 
             for chunk in chunks {
                 let sent = peripheralManager?.updateValue(
@@ -299,10 +298,7 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
                 ) ?? false
                 if !sent {
                     // Queue is full — buffer remaining chunks for retry in peripheralManagerIsReady
-                    print("⚠️ [iOS] updateValue returned false (queue full), buffering for retry")
                     pendingNotifications.append(chunk)
-                } else {
-                    print("📤 [iOS] Notification sent: \(chunk.count) bytes")
                 }
             }
             result(nil)
@@ -310,7 +306,6 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
             // Joiner sends via write to the message characteristic
             guard let peripheral = connectedPeripheral,
                   let characteristic = messageCharacteristic else {
-                print("❌ [iOS] sendMessage: Not connected (peripheral=\(connectedPeripheral != nil), char=\(messageCharacteristic != nil))")
                 result(FlutterError(code: "BLE_SEND_FAILED",
                                   message: "Not connected",
                                   details: nil))
@@ -321,7 +316,6 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
             // but we chunk to stay within the negotiated MTU for reliability.
             let mtu = peripheral.maximumWriteValueLength(for: .withResponse)
             let chunks = chunkData(data, maxPayload: mtu)
-            print("📤 [iOS] Joiner sending \(chunks.count) chunk(s), MTU=\(mtu)")
 
             for chunk in chunks {
                 peripheral.writeValue(chunk, for: characteristic, type: .withResponse)
@@ -672,8 +666,6 @@ extension NearbyBlePlugin: CBPeripheralManagerDelegate {
         // Called when the transmit queue has space again — retry pending notifications.
         guard let char = messageChar, !pendingNotifications.isEmpty else { return }
 
-        print("📤 [iOS] peripheralManagerIsReady: retrying \(pendingNotifications.count) pending notification(s)")
-
         while !pendingNotifications.isEmpty {
             let chunk = pendingNotifications[0]
             let sent = peripheral.updateValue(
@@ -683,10 +675,8 @@ extension NearbyBlePlugin: CBPeripheralManagerDelegate {
             )
             if sent {
                 pendingNotifications.removeFirst()
-                print("📤 [iOS] Retry notification sent: \(chunk.count) bytes, \(pendingNotifications.count) remaining")
             } else {
                 // Still full, will be called again when ready
-                print("⚠️ [iOS] Retry still blocked, \(pendingNotifications.count) remaining")
                 break
             }
         }

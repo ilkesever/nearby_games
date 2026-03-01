@@ -42,35 +42,55 @@ class _HomeScreenState extends State<HomeScreen> {
   final BleService _bleService = BleService();
   bool _bleAvailable = false;
   bool _bleChecked = false;
+  bool _bleInitializing = false;
   String _playerName = 'Player';
 
   @override
   void initState() {
     super.initState();
-    _checkBle();
+    // BLE is initialized lazily — only when user taps "Play Nearby"
+    // This avoids blocking the UI thread with CoreBluetooth manager
+    // creation on app startup.
   }
 
-  Future<void> _checkBle() async {
+  /// Initialize BLE lazily. Called when user wants to use BLE features.
+  Future<bool> _ensureBleReady() async {
+    if (_bleChecked) return _bleAvailable;
+    if (_bleInitializing) return false;
+    setState(() => _bleInitializing = true);
     try {
       await _bleService.initialize();
+      // Give CoreBluetooth a moment to settle its state after init
+      await Future<void>.delayed(const Duration(milliseconds: 300));
       final available = await _bleService.isAvailable();
       if (available) {
         final granted = await _bleService.requestPermissions();
-        setState(() {
-          _bleAvailable = granted;
-          _bleChecked = true;
-        });
+        if (mounted) {
+          setState(() {
+            _bleAvailable = granted;
+            _bleChecked = true;
+          });
+        }
+        return granted;
       } else {
+        if (mounted) {
+          setState(() {
+            _bleAvailable = false;
+            _bleChecked = true;
+          });
+        }
+        return false;
+      }
+    } catch (_) {
+      if (mounted) {
         setState(() {
           _bleAvailable = false;
           _bleChecked = true;
         });
       }
-    } catch (_) {
-      setState(() {
-        _bleAvailable = false;
-        _bleChecked = true;
-      });
+      return false;
+    } finally {
+      if (mounted) setState(() => _bleInitializing = false);
     }
   }
 
@@ -169,14 +189,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: _bleAvailable ? _navigateToLobby : null,
-                  icon: const Icon(Icons.bluetooth, size: 24),
+                  onPressed: _bleInitializing
+                      ? null
+                      : (_bleChecked && !_bleAvailable)
+                          ? null
+                          : () async {
+                              if (_bleAvailable) {
+                                _navigateToLobby();
+                              } else {
+                                // Lazy-init BLE on first tap
+                                final ready = await _ensureBleReady();
+                                if (ready && mounted) {
+                                  _navigateToLobby();
+                                }
+                              }
+                            },
+                  icon: _bleInitializing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.bluetooth, size: 24),
                   label: Text(
-                    !_bleChecked
-                        ? 'Checking Bluetooth...'
-                        : (_bleAvailable
-                            ? 'Play Nearby'
-                            : 'Bluetooth unavailable'),
+                    _bleInitializing
+                        ? 'Initializing Bluetooth...'
+                        : (_bleChecked
+                            ? (_bleAvailable
+                                ? 'Play Nearby'
+                                : 'Bluetooth unavailable')
+                            : 'Play Nearby'),
                     style: const TextStyle(fontSize: 18),
                   ),
                   style: ElevatedButton.styleFrom(

@@ -218,18 +218,14 @@ class BleService {
   /// Send a message to the connected remote device.
   Future<void> send(BleMessage message) async {
     if (!isConnected) {
-      debugPrint('📤 [BLE] send BLOCKED: not connected (state=$_state)');
       throw const BleDisconnectedException();
     }
     try {
       final json = message.toJson();
-      debugPrint('📤 [BLE] send: type=${message.type.name} seq=${message.seq} bytes=${json.length}');
       await _channel.invokeMethod('sendMessage', {
         'data': json,
       });
-      debugPrint('📤 [BLE] send SUCCESS: type=${message.type.name} seq=${message.seq}');
     } on PlatformException catch (e) {
-      debugPrint('📤 [BLE] send FAILED: ${e.code} ${e.message}');
       throw _mapPlatformException(e);
     }
   }
@@ -324,58 +320,49 @@ class BleService {
 
     final map = Map<String, dynamic>.from(event);
     final eventType = map['event'] as String?;
-    debugPrint('📥 [BLE] event: $eventType');
 
     switch (eventType) {
       case 'deviceFound':
         final device = BleDevice.fromMap(
           Map<String, dynamic>.from(map['device'] as Map),
         );
-        debugPrint('📥 [BLE] deviceFound: ${device.name} (${device.id})');
         _deviceFoundController.add(device);
 
       case 'deviceLost':
         final device = BleDevice.fromMap(
           Map<String, dynamic>.from(map['device'] as Map),
         );
-        debugPrint('📥 [BLE] deviceLost: ${device.name}');
         _deviceLostController.add(device);
 
       case 'connected':
         final connection = BleConnection.fromMap(
           Map<String, dynamic>.from(map['connection'] as Map),
         );
-        debugPrint('📥 [BLE] connected: role=${connection.localRole.name} remote=${connection.remoteDevice.name}');
         _activeConnection = connection;
         _updateState(BleConnectionState.connected);
         _connectionController.add(connection);
 
       case 'disconnected':
-        debugPrint('📥 [BLE] disconnected');
         _activeConnection = null;
         _updateState(BleConnectionState.disconnected);
 
       case 'message':
         final data = map['data'] as String;
-        debugPrint('📥 [BLE] message received: ${data.length} bytes');
         try {
           final message = BleMessage.fromJson(data);
-          debugPrint('📥 [BLE] message parsed: type=${message.type.name} seq=${message.seq}');
           _messageController.add(message);
         } catch (e) {
-          debugPrint('❌ [BLE] Failed to parse message: $e\n  raw data: $data');
+          debugPrint('❌ [BLE] Failed to parse message: $e');
         }
 
       case 'error':
         final code = map['code'] as String?;
         final msg = map['message'] as String? ?? 'Unknown error';
-        debugPrint('❌ [BLE] error: code=$code message=$msg');
         _errorController.add(BleException(msg, code: code));
     }
   }
 
   void _handleError(dynamic error) {
-    debugPrint('BLE event stream error: $error');
     _errorController.add(BleException('Event stream error: $error'));
   }
 

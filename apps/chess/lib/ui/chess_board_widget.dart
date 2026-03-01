@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../game/chess_engine.dart';
 import '../game/chess_move.dart';
 import '../game/chess_state.dart';
+
+/// Returns the asset path for a chess piece SVG.
+String _pieceAssetPath(ChessPiece piece) {
+  final colorPrefix = piece.color == ChessColor.white ? 'w' : 'b';
+  final typeChar = switch (piece.type) {
+    ChessPieceType.king => 'K',
+    ChessPieceType.queen => 'Q',
+    ChessPieceType.rook => 'R',
+    ChessPieceType.bishop => 'B',
+    ChessPieceType.knight => 'N',
+    ChessPieceType.pawn => 'P',
+  };
+  return 'assets/pieces/$colorPrefix$typeChar.svg';
+}
 
 /// Interactive chess board widget.
 ///
@@ -135,9 +150,10 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
                     border: Border.all(color: Colors.brown[300]!),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    ChessPiece(type, color).symbol,
-                    style: const TextStyle(fontSize: 36),
+                  child: SvgPicture.asset(
+                    _pieceAssetPath(ChessPiece(type, color)),
+                    width: 48,
+                    height: 48,
                   ),
                 ),
               ),
@@ -208,48 +224,45 @@ class _ChessBoardWidgetState extends State<ChessBoardWidget> {
         color: bgColor,
         child: Stack(
           children: [
-            // Valid move indicator
+            // Piece
+            if (piece != null)
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: SvgPicture.asset(
+                    _pieceAssetPath(piece),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+
+            // Valid move indicator (drawn on top of pieces)
             if (isValidTarget)
               Center(
                 child: piece != null
-                    ? Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            width: 3,
+                    ? FractionallySizedBox(
+                        widthFactor: 0.85,
+                        heightFactor: 0.85,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              width: 3,
+                            ),
                           ),
                         ),
-                        width: double.infinity,
-                        height: double.infinity,
                       )
-                    : Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withValues(alpha: 0.25),
+                    : FractionallySizedBox(
+                        widthFactor: 0.3,
+                        heightFactor: 0.3,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.25),
+                          ),
                         ),
                       ),
-              ),
-
-            // Piece
-            if (piece != null)
-              Center(
-                child: Text(
-                  piece.symbol,
-                  style: TextStyle(
-                    fontSize: 32,
-                    height: 1.2,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 2,
-                        color: Colors.black.withValues(alpha: 0.3),
-                        offset: const Offset(1, 1),
-                      ),
-                    ],
-                  ),
-                ),
               ),
 
             // Coordinate labels (a-h, 1-8)

@@ -47,6 +47,12 @@
 			</array>
 		</dict>
 	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartVmService._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Looking for local tcp Dart VM Service port.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app uses Bluetooth to connect with nearby players for multiplayer chess.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
