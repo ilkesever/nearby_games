@@ -20,9 +20,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.nearbygames.chess"
-        // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
@@ -30,11 +28,26 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // IMPORTANT: Before releasing to the Play Store, create a release keystore and
+        // configure it here (or via environment variables / key.properties).
+        // See: https://docs.flutter.dev/deployment/android#signing-the-app
+        //
+        // Example using a key.properties file:
+        // create("release") {
+        //     keyAlias = keystoreProperties["keyAlias"] as String
+        //     keyPassword = keystoreProperties["keyPassword"] as String
+        //     storeFile = file(keystoreProperties["storeFile"] as String)
+        //     storePassword = keystoreProperties["storePassword"] as String
+        // }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // ⚠️ Replace with your release signingConfig before submitting to the Play Store.
+            // signingConfig = signingConfigs.getByName("release")
             signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled = false
         }
     }
 }

@@ -239,12 +239,14 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildChoiceScreen() {
-    return Padding(
+    return Center(
       key: const ValueKey('choice'),
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
           Icon(Icons.bluetooth, size: 64, color: _accent),
           const SizedBox(height: 24),
           Text(
@@ -283,16 +285,19 @@ class _LobbyScreenState extends State<LobbyScreen>
           ],
         ],
       ),
+    ),
     );
   }
 
   Widget _buildHostingScreen() {
-    return Padding(
+    return Center(
       key: const ValueKey('hosting'),
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
           AnimatedBuilder(
             animation: _pulseController,
             builder: (context, child) {
@@ -338,6 +343,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           ],
         ],
       ),
+    ),
     );
   }
 

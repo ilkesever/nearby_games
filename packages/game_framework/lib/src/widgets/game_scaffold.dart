@@ -53,6 +53,8 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: accentColor,
+        foregroundColor: Colors.white,
         title: Text(gameName),
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -64,8 +66,7 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
               onSelected: (value) => _handleAction(context, value),
               itemBuilder: (_) => [
                 const PopupMenuItem(value: 'resign', child: Text('Resign')),
-                const PopupMenuItem(
-                    value: 'draw', child: Text('Offer Draw')),
+                const PopupMenuItem(value: 'draw', child: Text('Offer Draw')),
                 const PopupMenuItem(value: 'undo', child: Text('Request Undo')),
               ],
             ),
@@ -89,7 +90,10 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
                 _StatusBar(session: session, accentColor: accent),
 
                 // Game board (the main content)
-                Expanded(child: gameBoard),
+                // Center gives AspectRatio a loose constraint so the board
+                // always renders as a perfect square, regardless of the
+                // surrounding chrome height (player bars, status bar, etc.).
+                Expanded(child: Center(child: gameBoard)),
 
                 // Local player info
                 _PlayerBar(

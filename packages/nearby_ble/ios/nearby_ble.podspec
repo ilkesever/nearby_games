@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'nearby_ble'
-  s.version          = '0.0.1'
+  s.version          = '0.1.0'
   s.summary          = 'BLE-based nearby P2P communication for multiplayer games.'
   s.description      = <<-DESC
 Cross-platform BLE plugin for peer-to-peer nearby communication.
@@ -20,7 +20,14 @@ Uses CoreBluetooth for iOS↔Android multiplayer gaming without internet.
   s.frameworks = 'CoreBluetooth'
 
   # Flutter.framework does not contain a i386 slice.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
+  # FRAMEWORK_SEARCH_PATHS ensures the Flutter module is found during VerifyModule
+  # in Release builds for device (Release-iphoneos), where FLUTTER_FRAMEWORK_DIR
+  # and the pod build dir must both be on the search path.
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
+    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) $(PODS_CONFIGURATION_BUILD_DIR)/Flutter $(FLUTTER_FRAMEWORK_DIR)'
+  }
   s.swift_version = '5.0'
 
   # If your plugin requires a privacy manifest, for example if it uses any
