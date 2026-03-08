@@ -40,6 +40,7 @@ class BleService {
   final _connectionController = StreamController<BleConnection>.broadcast();
   final _messageController = StreamController<BleMessage>.broadcast();
   final _errorController = StreamController<BleException>.broadcast();
+  final _bleAvailableController = StreamController<bool>.broadcast();
 
   // --- State ---
   BleConnectionState _state = BleConnectionState.disconnected;
@@ -76,6 +77,14 @@ class BleService {
 
   /// Stream of BLE errors.
   Stream<BleException> get onError => _errorController.stream;
+
+  /// Fires whenever the Bluetooth adapter becomes available or unavailable.
+  ///
+  /// On iOS this is called after CoreBluetooth settles its state — including
+  /// after the user grants (or denies) the Bluetooth permission prompt for
+  /// the first time. Listen to this stream to reactively update UI without
+  /// requiring an app restart.
+  Stream<bool> get onBleAvailabilityChanged => _bleAvailableController.stream;
 
   /// Initialize the BLE service.
   ///
@@ -296,6 +305,7 @@ class BleService {
     _connectionController.close();
     _messageController.close();
     _errorController.close();
+    _bleAvailableController.close();
   }
 
   // ==========================================================================
@@ -354,6 +364,10 @@ class BleService {
         } catch (e) {
           debugPrint('❌ [BLE] Failed to parse message: $e');
         }
+
+      case 'bleStateChanged':
+        final available = map['available'] as bool? ?? false;
+        _bleAvailableController.add(available);
 
       case 'error':
         final code = map['code'] as String?;

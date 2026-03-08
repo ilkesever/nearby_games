@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:game_framework/game_framework.dart';
 import 'package:nearby_ble/nearby_ble.dart';
@@ -45,42 +47,63 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _bleInitializing = false;
   String _playerName = 'Player';
 
+  // Subscription kept alive so the button reacts to BLE state changes
+  // (e.g. user toggles Bluetooth off/on while the app is open).
+  StreamSubscription<bool>? _bleAvailabilitySub;
+
   @override
   void initState() {
     super.initState();
-    // BLE is initialized lazily — only when user taps "Play Nearby"
-    // This avoids blocking the UI thread with CoreBluetooth manager
-    // creation on app startup.
+    // BLE is initialized lazily — only when user taps "Play Nearby".
+    // This avoids triggering the iOS Bluetooth permission dialog on startup.
   }
 
   /// Initialize BLE lazily. Called when user wants to use BLE features.
+  ///
+  /// On iOS, creating CBCentralManager starts CoreBluetooth's state machine.
+  /// The state (and any permission prompt) resolves asynchronously via the
+  /// centralManagerDidUpdateState delegate callback, which now emits a
+  /// [BleService.onBleAvailabilityChanged] event.
+  ///
+  /// We subscribe to that stream *before* calling initialize() so we never
+  /// miss the first event — even if the user has to respond to the iOS
+  /// Bluetooth permission dialog before the state settles.
   Future<bool> _ensureBleReady() async {
     if (_bleChecked) return _bleAvailable;
     if (_bleInitializing) return false;
     setState(() => _bleInitializing = true);
+
     try {
+      // Subscribe before initialize() — CoreBluetooth may fire its first
+      // state update very quickly on subsequent launches.
+      final completer = Completer<bool>();
+      _bleAvailabilitySub = _bleService.onBleAvailabilityChanged.listen((available) {
+        // Resolve the one-time wait on the first state event.
+        if (!completer.isCompleted) completer.complete(available);
+        // Keep updating the button if BLE state changes later
+        // (e.g. user flips Bluetooth in Control Center while app is open).
+        if (mounted) setState(() => _bleAvailable = available);
+      });
+
       await _bleService.initialize();
-      // Give CoreBluetooth a moment to settle its state after init
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-      final available = await _bleService.isAvailable();
-      if (available) {
-        final granted = await _bleService.requestPermissions();
-        if (mounted) {
-          setState(() {
-            _bleAvailable = granted;
-            _bleChecked = true;
-          });
-        }
-        return granted;
-      } else {
-        if (mounted) {
-          setState(() {
-            _bleAvailable = false;
-            _bleChecked = true;
-          });
-        }
-        return false;
+
+      // Wait for CoreBluetooth to report its settled state.
+      // • Subsequent launches (permission already granted): resolves in ~ms.
+      // • First launch: resolves after the user responds to the iOS
+      //   Bluetooth permission dialog (could take several seconds).
+      // • Timeout fallback: direct isAvailable() call after 30 s.
+      final available = await completer.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => _bleService.isAvailable(),
+      );
+
+      if (mounted) {
+        setState(() {
+          _bleAvailable = available;
+          _bleChecked = true;
+        });
       }
+      return available;
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -96,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _bleAvailabilitySub?.cancel();
     _bleService.dispose();
     super.dispose();
   }

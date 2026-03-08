@@ -409,7 +409,11 @@ public class NearbyBlePlugin: NSObject, FlutterPlugin {
 extension NearbyBlePlugin: CBCentralManagerDelegate {
 
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        // State updates are handled by isAvailable/requestPermissions
+        let available = central.state == .poweredOn
+        sendEvent([
+            "event": "bleStateChanged",
+            "available": available
+        ])
     }
 
     public func centralManager(_ central: CBCentralManager,

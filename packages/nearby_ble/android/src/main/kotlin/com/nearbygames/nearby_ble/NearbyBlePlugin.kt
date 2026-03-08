@@ -212,12 +212,14 @@ class NearbyBlePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHan
 
         val permissions = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+
+            // Android 12+: Bluetooth permissions only — no location needed when neverForLocation is set
             permissions.add(Manifest.permission.BLUETOOTH_SCAN)
             permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE)
             permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            // Android 11 and below: location is required by the OS for BLE scanning
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
         }
-        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
 
         val missing = permissions.filter {
             ContextCompat.checkSelfPermission(act, it) != PackageManager.PERMISSION_GRANTED

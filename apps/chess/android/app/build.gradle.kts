@@ -15,8 +15,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     defaultConfig {
@@ -43,11 +45,16 @@ android {
     }
 
     buildTypes {
+        debug {
+            isShrinkResources = false
+            isMinifyEnabled = false
+        }
         release {
             // ⚠️ Replace with your release signingConfig before submitting to the Play Store.
             // signingConfig = signingConfigs.getByName("release")
             signingConfig = signingConfigs.getByName("debug")
-            minifyEnabled = false
+            isShrinkResources = false
+            isMinifyEnabled = false
         }
     }
 }
