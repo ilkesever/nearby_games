@@ -1,0 +1,1 @@
+Schach mit nahegelegenen Spielern über Bluetooth spielen. Kein Internet erforderlich!

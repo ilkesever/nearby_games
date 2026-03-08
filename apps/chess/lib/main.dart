@@ -48,6 +48,7 @@ class ChessApp extends StatelessWidget {
         Locale('pt'),
         Locale('id'),
         Locale('tr'),
+        Locale('de'),
       ],
       home: const HomeScreen(),
     );

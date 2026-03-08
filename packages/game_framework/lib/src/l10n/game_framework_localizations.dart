@@ -39,6 +39,7 @@ class GameFrameworkLocalizations {
     Locale('pt'),
     Locale('id'),
     Locale('tr'),
+    Locale('de'),
   ];
 
   String _t(String key) {
@@ -104,7 +105,7 @@ class _Delegate extends LocalizationsDelegate<GameFrameworkLocalizations> {
   const _Delegate();
 
   static const _supportedLanguages = {
-    'en', 'zh', 'hi', 'es', 'fr', 'ar', 'bn', 'ru', 'pt', 'id', 'tr',
+    'en', 'zh', 'hi', 'es', 'fr', 'ar', 'bn', 'ru', 'pt', 'id', 'tr', 'de',
   };
 
   @override
@@ -533,6 +534,46 @@ const Map<String, Map<String, String>> _strings = {
     'gameConnectionLost': 'Koneksi terputus',
     'gameOpponent': 'Lawan',
     'gameYou': 'Kamu',
+  },
+  // -------------------------------------------------------------------------
+  'de': {
+    'lobbyNearbyGame': '{gameName} in der Nähe',
+    'lobbyPlayWithSomeoneNearby': 'Spiele per Bluetooth mit jemandem in der Nähe',
+    'lobbyCreateGame': 'Spiel erstellen',
+    'lobbyCreateGameSubtitle': 'Spiel hosten und auf einen Spieler warten',
+    'lobbyJoinGame': 'Spiel beitreten',
+    'lobbyJoinGameSubtitle': 'Ein Spiel in der Nähe finden und beitreten',
+    'lobbyWaitingForOpponent': 'Warte auf Gegner...',
+    'lobbyGameVisible': 'Dein Spiel ist für Spieler in der Nähe sichtbar',
+    'lobbyNearbyGames': 'Spiele in der Nähe',
+    'lobbyLookingForGames': 'Suche nach {gameName}-Spielen in der Nähe...',
+    'lobbyNoGamesFound': 'Noch keine Spiele gefunden',
+    'lobbyMakeSureOtherPlayer': 'Stelle sicher, dass der andere Spieler ein Spiel erstellt hat',
+    'lobbyDistanceImmediate': 'Sehr nah',
+    'lobbyDistanceNear': 'In der Nähe',
+    'lobbyDistanceFar': 'Weit entfernt',
+    'lobbyDistanceUnknown': 'Entfernung unbekannt',
+    'lobbyJoinButton': 'Beitreten',
+    'gameResign': 'Aufgeben',
+    'gameOfferDraw': 'Remis anbieten',
+    'gameRequestUndo': 'Rückzug anfragen',
+    'gameDrawOfferSent': 'Remisangebot gesendet',
+    'gameUndoRequestSent': 'Rückzuganfrage gesendet',
+    'gameResignTitle': 'Aufgeben?',
+    'gameResignContent': 'Möchtest du dieses Spiel wirklich aufgeben?',
+    'gameCancel': 'Abbrechen',
+    'gameLeaveTitle': 'Spiel verlassen?',
+    'gameLeaveContent': 'Das aktuelle Spiel wird beendet. Bist du sicher?',
+    'gameStay': 'Bleiben',
+    'gameLeave': 'Verlassen',
+    'gameTurn': 'Zug',
+    'gameWaiting': 'Warte auf Spielstart...',
+    'gameYourTurn': 'Du bist dran',
+    'gameOpponentTurn': 'Gegner ist dran',
+    'gameOver': 'Spiel beendet',
+    'gameConnectionLost': 'Verbindung unterbrochen',
+    'gameOpponent': 'Gegner',
+    'gameYou': 'Du',
   },
   // -------------------------------------------------------------------------
   'tr': {

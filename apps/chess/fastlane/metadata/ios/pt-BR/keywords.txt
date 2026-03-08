@@ -1,1 +1,1 @@
-xadrez,multiplayer,bluetooth,jogo de tabuleiro,estratégia,offline,próximo,amigos,clássico
+xadrez,multiplayer,bluetooth,tabuleiro,estratégia,offline,próximo,amigos,clássico,cara a cara,chess

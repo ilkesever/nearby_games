@@ -9,6 +9,7 @@ platform :ios do
       skip_binary_upload: true,   # Only update metadata, do not upload a new build
       skip_screenshots: true,     # Set to false if you also want to manage screenshots
       force: true,                # Skip HTML preview prompt
+      precheck_include_in_app_purchases: false, # API Key auth cannot check IAPs; skip this precheck
       metadata_path: "./fastlane/metadata/ios",
       api_key_path: "fastlane/app-store-connect-api-key.json" # Replace with your API key path
     )

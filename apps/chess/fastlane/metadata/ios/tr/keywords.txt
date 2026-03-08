@@ -1,1 +1,1 @@
-satranç,çok oyunculu,bluetooth,masa oyunu,strateji,çevrimdışı,yakın,arkadaşlar,klasik
+satranç,chess,çok oyunculu,bluetooth,masa oyunu,strateji,çevrimdışı,yakın,arkadaşlar,klasik
