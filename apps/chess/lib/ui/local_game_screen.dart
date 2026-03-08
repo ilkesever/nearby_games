@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../game/chess_engine.dart';
 import '../game/chess_move.dart';
 import '../game/chess_state.dart';
+import '../src/l10n/app_localizations.dart';
 import 'chess_board_widget.dart';
 
 /// Local "Pass & Play" mode — two players on one device.
-///
-/// This allows testing the chess board and engine without BLE.
-/// Players take turns tapping the same screen.
 class LocalGameScreen extends StatefulWidget {
   const LocalGameScreen({super.key});
 
@@ -45,21 +44,27 @@ class _LocalGameScreenState extends State<LocalGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     final turnText = _state.isGameOver
         ? (_state.winner != null
-            ? '${_state.winner == ChessColor.white ? "White" : "Black"} wins!'
-            : 'Draw!')
-        : '${_state.activeColor == ChessColor.white ? "White" : "Black"}\'s turn';
+            ? (_state.winner == ChessColor.white
+                ? l10n.localGameWhiteWins
+                : l10n.localGameBlackWins)
+            : l10n.localGameDraw)
+        : (_state.activeColor == ChessColor.white
+            ? l10n.localGameWhiteTurn
+            : l10n.localGameBlackTurn);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chess — Local Play'),
+        title: Text(l10n.localGameTitle),
         backgroundColor: Colors.brown[800],
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'New Game',
+            tooltip: l10n.localGameNewGame,
             onPressed: _resetGame,
           ),
         ],
@@ -80,19 +85,22 @@ class _LocalGameScreenState extends State<LocalGameScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (_state.isInCheck && !_state.isGameOver)
-                    const Icon(Icons.warning_amber, color: Colors.red, size: 18),
+                    const Icon(Icons.warning_amber,
+                        color: Colors.red, size: 18),
                   if (_state.isInCheck && !_state.isGameOver)
                     const SizedBox(width: 6),
                   Text(
                     _state.isInCheck && !_state.isGameOver
-                        ? '$turnText — CHECK!'
+                        ? '$turnText ${l10n.localGameCheckSuffix}'
                         : turnText,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: _state.isGameOver
                           ? Colors.deepPurple
-                          : (_state.isInCheck ? Colors.red : Colors.brown[800]),
+                          : (_state.isInCheck
+                              ? Colors.red
+                              : Colors.brown[800]),
                     ),
                   ),
                 ],
@@ -119,10 +127,10 @@ class _LocalGameScreenState extends State<LocalGameScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               color: Colors.brown[50],
               child: _moveHistory.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Tap a piece to start playing',
-                        style: TextStyle(color: Colors.grey),
+                        l10n.localGameTapToStart,
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     )
                   : ListView.builder(
@@ -157,7 +165,7 @@ class _LocalGameScreenState extends State<LocalGameScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _resetGame,
                   icon: const Icon(Icons.replay),
-                  label: const Text('Play Again'),
+                  label: Text(l10n.localGamePlayAgain),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.brown[700],
                     foregroundColor: Colors.white,

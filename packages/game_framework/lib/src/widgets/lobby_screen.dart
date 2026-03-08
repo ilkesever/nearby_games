@@ -3,46 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nearby_ble/nearby_ble.dart';
 
+import '../l10n/game_framework_localizations.dart';
+
 /// Reusable lobby screen for discovering and connecting to nearby players.
-///
-/// This screen is shared across all games. It handles:
-/// - Choosing to host or join a game
-/// - BLE advertising (host) and scanning (join)
-/// - Displaying discovered players
-/// - Connecting to a selected player
-///
-/// Usage:
-/// ```dart
-/// Navigator.push(context, MaterialPageRoute(
-///   builder: (_) => LobbyScreen(
-///     gameType: 'chess',
-///     gameName: 'Chess',
-///     bleService: bleService,
-///     onConnected: (connection, isHost) {
-///       // Navigate to game screen
-///     },
-///   ),
-/// ));
-/// ```
 class LobbyScreen extends StatefulWidget {
-  /// The game type identifier (e.g., "chess").
   final String gameType;
-
-  /// Human-readable game name (e.g., "Chess").
   final String gameName;
-
-  /// The BLE service instance.
   final BleService bleService;
-
-  /// Called when a connection is established.
-  /// [connection] — The BLE connection.
-  /// [isHost] — Whether the local player is the host.
   final void Function(BleConnection connection, bool isHost) onConnected;
-
-  /// Optional player name (defaults to device name).
   final String playerName;
-
-  /// Optional theme color for the lobby.
   final Color? accentColor;
 
   const LobbyScreen({
@@ -99,7 +68,6 @@ class _LobbyScreenState extends State<LobbyScreen>
     });
 
     _connectionSub = widget.bleService.onConnection.listen((connection) {
-      // Host received a connection from a joiner
       if (_mode == _LobbyMode.hosting) {
         widget.onConnected(connection, true);
       }
@@ -119,9 +87,6 @@ class _LobbyScreenState extends State<LobbyScreen>
     _deviceLostSub?.cancel();
     _connectionSub?.cancel();
     _errorSub?.cancel();
-    // Only clean up BLE if NOT connected.
-    // If connected, the game screen now owns the BLE connection —
-    // tearing down hosting/scanning would kill the active GATT service.
     if (!widget.bleService.isConnected) {
       widget.bleService.stopScanning().catchError((_) {});
       widget.bleService.stopHosting().catchError((_) {});
@@ -131,16 +96,11 @@ class _LobbyScreenState extends State<LobbyScreen>
 
   Color get _accent => widget.accentColor ?? Theme.of(context).primaryColor;
 
-  // ==========================================================================
-  // ACTIONS
-  // ==========================================================================
-
   Future<void> _startHosting() async {
     setState(() {
       _mode = _LobbyMode.hosting;
       _errorMessage = null;
     });
-
     try {
       await widget.bleService.startHosting(
         gameType: widget.gameType,
@@ -160,7 +120,6 @@ class _LobbyScreenState extends State<LobbyScreen>
       _discoveredDevices.clear();
       _errorMessage = null;
     });
-
     try {
       await widget.bleService.startScanning(gameType: widget.gameType);
     } catch (e) {
@@ -176,7 +135,6 @@ class _LobbyScreenState extends State<LobbyScreen>
       _isConnecting = true;
       _errorMessage = null;
     });
-
     try {
       final connection = await widget.bleService.connect(
         device,
@@ -201,10 +159,6 @@ class _LobbyScreenState extends State<LobbyScreen>
       _errorMessage = null;
     });
   }
-
-  // ==========================================================================
-  // BUILD
-  // ==========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +193,7 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 
   Widget _buildChoiceScreen() {
+    final l10n = GameFrameworkLocalizations.of(context);
     return Center(
       key: const ValueKey('choice'),
       child: SingleChildScrollView(
@@ -247,49 +202,50 @@ class _LobbyScreenState extends State<LobbyScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-          Icon(Icons.bluetooth, size: 64, color: _accent),
-          const SizedBox(height: 24),
-          Text(
-            'Nearby ${widget.gameName}',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Play with someone nearby using Bluetooth',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 48),
-          _LobbyButton(
-            icon: Icons.add_circle_outline,
-            label: 'Create Game',
-            subtitle: 'Host a game and wait for a player',
-            color: _accent,
-            onTap: _startHosting,
-          ),
-          const SizedBox(height: 16),
-          _LobbyButton(
-            icon: Icons.search,
-            label: 'Join Game',
-            subtitle: 'Find a nearby game to join',
-            color: _accent,
-            onTap: _startScanning,
-          ),
-          if (_errorMessage != null) ...[
+            Icon(Icons.bluetooth, size: 64, color: _accent),
             const SizedBox(height: 24),
-            _ErrorBanner(message: _errorMessage!),
+            Text(
+              l10n.lobbyNearbyGame(widget.gameName),
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.lobbyPlayWithSomeoneNearby,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 48),
+            _LobbyButton(
+              icon: Icons.add_circle_outline,
+              label: l10n.lobbyCreateGame,
+              subtitle: l10n.lobbyCreateGameSubtitle,
+              color: _accent,
+              onTap: _startHosting,
+            ),
+            const SizedBox(height: 16),
+            _LobbyButton(
+              icon: Icons.search,
+              label: l10n.lobbyJoinGame,
+              subtitle: l10n.lobbyJoinGameSubtitle,
+              color: _accent,
+              onTap: _startScanning,
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 24),
+              _ErrorBanner(message: _errorMessage!),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
     );
   }
 
   Widget _buildHostingScreen() {
+    final l10n = GameFrameworkLocalizations.of(context);
     return Center(
       key: const ValueKey('hosting'),
       child: SingleChildScrollView(
@@ -298,56 +254,58 @@ class _LobbyScreenState extends State<LobbyScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: 1.0 + (_pulseController.value * 0.1),
-                child: Icon(
-                  Icons.bluetooth_searching,
-                  size: 80,
-                  color: _accent.withValues(
-                    alpha: 0.5 + (_pulseController.value * 0.5),
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: 1.0 + (_pulseController.value * 0.1),
+                  child: Icon(
+                    Icons.bluetooth_searching,
+                    size: 80,
+                    color: _accent.withValues(
+                      alpha: 0.5 + (_pulseController.value * 0.5),
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Waiting for opponent...',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Your game is visible to nearby players',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+                );
+              },
             ),
-            child: Text(
-              '${widget.playerName} • ${widget.gameName}',
-              style: TextStyle(color: _accent, fontWeight: FontWeight.w600),
+            const SizedBox(height: 32),
+            Text(
+              l10n.lobbyWaitingForOpponent,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-          ),
-          if (_errorMessage != null) ...[
-            const SizedBox(height: 24),
-            _ErrorBanner(message: _errorMessage!),
+            const SizedBox(height: 8),
+            Text(
+              l10n.lobbyGameVisible,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: _accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${widget.playerName} • ${widget.gameName}',
+                style:
+                    TextStyle(color: _accent, fontWeight: FontWeight.w600),
+              ),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 24),
+              _ErrorBanner(message: _errorMessage!),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
     );
   }
 
   Widget _buildScanningScreen() {
+    final l10n = GameFrameworkLocalizations.of(context);
     return Padding(
       key: const ValueKey('scanning'),
       padding: const EdgeInsets.all(24),
@@ -359,7 +317,7 @@ class _LobbyScreenState extends State<LobbyScreen>
               Icon(Icons.bluetooth_searching, color: _accent),
               const SizedBox(width: 12),
               Text(
-                'Nearby Games',
+                l10n.lobbyNearbyGames,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const Spacer(),
@@ -375,7 +333,7 @@ class _LobbyScreenState extends State<LobbyScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Looking for ${widget.gameName} games nearby...',
+            l10n.lobbyLookingForGames(widget.gameName),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey[600],
                 ),
@@ -390,13 +348,15 @@ class _LobbyScreenState extends State<LobbyScreen>
                     Icon(Icons.radar, size: 48, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
-                      'No games found yet',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                      l10n.lobbyNoGamesFound,
+                      style:
+                          TextStyle(color: Colors.grey[500], fontSize: 16),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Make sure the other player has created a game',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                      l10n.lobbyMakeSureOtherPlayer,
+                      style:
+                          TextStyle(color: Colors.grey[400], fontSize: 13),
                     ),
                   ],
                 ),
@@ -427,9 +387,9 @@ class _LobbyScreenState extends State<LobbyScreen>
   }
 }
 
-// ==========================================================================
+// =============================================================================
 // HELPER WIDGETS
-// ==========================================================================
+// =============================================================================
 
 class _LobbyButton extends StatelessWidget {
   final IconData icon;
@@ -518,6 +478,7 @@ class _DeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = GameFrameworkLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -529,7 +490,7 @@ class _DeviceCard extends StatelessWidget {
           device.name,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(_distanceLabel),
+        subtitle: Text(_distanceLabel(l10n)),
         trailing: isConnecting
             ? const SizedBox(
                 width: 24,
@@ -542,23 +503,23 @@ class _DeviceCard extends StatelessWidget {
                   backgroundColor: accentColor,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Join'),
+                child: Text(l10n.lobbyJoinButton),
               ),
         onTap: isConnecting ? null : onTap,
       ),
     );
   }
 
-  String get _distanceLabel {
+  String _distanceLabel(GameFrameworkLocalizations l10n) {
     switch (device.estimatedDistance) {
       case BleDeviceDistance.immediate:
-        return 'Very close';
+        return l10n.lobbyDistanceImmediate;
       case BleDeviceDistance.near:
-        return 'Nearby';
+        return l10n.lobbyDistanceNear;
       case BleDeviceDistance.far:
-        return 'Far away';
+        return l10n.lobbyDistanceFar;
       case BleDeviceDistance.unknown:
-        return 'Distance unknown';
+        return l10n.lobbyDistanceUnknown;
     }
   }
 }

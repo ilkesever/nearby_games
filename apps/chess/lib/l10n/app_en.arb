@@ -1,0 +1,78 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Nearby Chess",
+  "@appTitle": { "description": "The app title" },
+
+  "homeTagline": "Play chess with someone nearby\nNo internet required",
+  "@homeTagline": { "description": "Home screen tagline" },
+
+  "homeYourName": "Your Name",
+  "@homeYourName": { "description": "Label for the player name text field" },
+
+  "homeInitializingBluetooth": "Initializing Bluetooth...",
+  "@homeInitializingBluetooth": { "description": "BLE initializing label" },
+
+  "homePlayNearby": "Play Nearby",
+  "@homePlayNearby": { "description": "Button to play nearby via BLE" },
+
+  "homeBluetoothUnavailable": "Bluetooth unavailable",
+  "@homeBluetoothUnavailable": { "description": "BLE not available label" },
+
+  "homeLocalPlay": "Local Play (Pass & Play)",
+  "@homeLocalPlay": { "description": "Button for local pass-and-play" },
+
+  "homeBluetoothInfo": "Uses Bluetooth • Works offline",
+  "@homeBluetoothInfo": { "description": "Info label at bottom of home screen" },
+
+  "localGameTitle": "Chess — Local Play",
+  "@localGameTitle": { "description": "App bar title for local game screen" },
+
+  "localGameNewGame": "New Game",
+  "@localGameNewGame": { "description": "Tooltip/button for starting a new game" },
+
+  "localGameWhiteWins": "White wins!",
+  "@localGameWhiteWins": { "description": "Status when white wins" },
+
+  "localGameBlackWins": "Black wins!",
+  "@localGameBlackWins": { "description": "Status when black wins" },
+
+  "localGameDraw": "Draw!",
+  "@localGameDraw": { "description": "Status when game is a draw" },
+
+  "localGameWhiteTurn": "White's turn",
+  "@localGameWhiteTurn": { "description": "Status when it's white's turn" },
+
+  "localGameBlackTurn": "Black's turn",
+  "@localGameBlackTurn": { "description": "Status when it's black's turn" },
+
+  "localGameCheckSuffix": "— CHECK!",
+  "@localGameCheckSuffix": { "description": "Appended to turn text when in check" },
+
+  "localGameTapToStart": "Tap a piece to start playing",
+  "@localGameTapToStart": { "description": "Hint in move history when no moves yet" },
+
+  "localGamePlayAgain": "Play Again",
+  "@localGamePlayAgain": { "description": "Button to play again after game over" },
+
+  "drawOfferedTitle": "Draw Offered",
+  "@drawOfferedTitle": { "description": "Title of draw offer dialog" },
+
+  "drawOfferedContent": "Your opponent is offering a draw. Accept?",
+  "@drawOfferedContent": { "description": "Body of draw offer dialog" },
+
+  "drawDecline": "Decline",
+  "@drawDecline": { "description": "Button to decline a draw" },
+
+  "drawAccept": "Accept",
+  "@drawAccept": { "description": "Button to accept a draw" },
+
+  "undoRequestedTitle": "Undo Requested",
+  "@undoRequestedTitle": { "description": "Title of undo request dialog" },
+
+  "undoRequestedContent": "Your opponent wants to undo their last move. Allow?",
+  "@undoRequestedContent": { "description": "Body of undo request dialog" },
+
+  "undoAllow": "Allow",
+  "@undoAllow": { "description": "Button to allow an undo" }
+}

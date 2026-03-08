@@ -1,0 +1,1 @@
+Lançamento inicial do Xadrez Próximo — jogue xadrez com qualquer pessoa por perto via Bluetooth!

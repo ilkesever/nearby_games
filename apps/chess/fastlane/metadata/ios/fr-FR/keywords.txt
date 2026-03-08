@@ -1,0 +1,1 @@
+échecs,multijoueur,bluetooth,jeu de société,stratégie,hors ligne,proximité,amis,classique

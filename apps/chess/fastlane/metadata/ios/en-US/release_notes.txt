@@ -1,0 +1,1 @@
+Initial release of Nearby Chess — play chess with anyone nearby over Bluetooth!

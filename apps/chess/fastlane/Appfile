@@ -1,0 +1,7 @@
+# iOS
+app_identifier "com.nearbygames.chess"
+apple_id "severilke@gmail.com"   # Replace with your Apple ID
+
+# Android
+json_key_file "fastlane/google-play-key.json"  # Path to your Google Play service account JSON
+package_name "com.nearbygames.chess"

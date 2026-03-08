@@ -5,11 +5,10 @@ import 'package:nearby_ble/nearby_ble.dart';
 import '../game/chess_engine.dart';
 import '../game/chess_move.dart';
 import '../game/chess_state.dart';
+import '../src/l10n/app_localizations.dart';
 import 'chess_board_widget.dart';
 
 /// The main chess game screen.
-///
-/// Wraps [GameScaffold] with the chess-specific board widget.
 class ChessGameScreen extends StatefulWidget {
   final BleService bleService;
   final BleConnection connection;
@@ -42,21 +41,18 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
       bleService: widget.bleService,
     );
 
-    // Start the game: host is white (player0), joiner is black (player1)
     _session.startGame(
       localSide: widget.isHost ? PlayerSide.player0 : PlayerSide.player1,
       localName: widget.playerName,
       remoteName: widget.connection.remoteDevice.name,
     );
 
-    // Track the last move for highlighting
     _session.moveStream.listen((move) {
       setState(() {
         _lastMove = move;
       });
     });
 
-    // Listen for game events
     _session.errorStream.listen((event) {
       if (!mounted) return;
       switch (event) {
@@ -85,25 +81,26 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
   }
 
   void _showDrawOfferDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Draw Offered'),
-        content: const Text('Your opponent is offering a draw. Accept?'),
+        title: Text(l10n.drawOfferedTitle),
+        content: Text(l10n.drawOfferedContent),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _session.declineDraw();
             },
-            child: const Text('Decline'),
+            child: Text(l10n.drawDecline),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _session.acceptDraw();
             },
-            child: const Text('Accept'),
+            child: Text(l10n.drawAccept),
           ),
         ],
       ),
@@ -111,26 +108,26 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
   }
 
   void _showUndoRequestDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Undo Requested'),
-        content:
-            const Text('Your opponent wants to undo their last move. Allow?'),
+        title: Text(l10n.undoRequestedTitle),
+        content: Text(l10n.undoRequestedContent),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _session.declineUndo();
             },
-            child: const Text('Decline'),
+            child: Text(l10n.drawDecline),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _session.acceptUndo();
             },
-            child: const Text('Allow'),
+            child: Text(l10n.undoAllow),
           ),
         ],
       ),
@@ -139,9 +136,10 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return GameScaffold<ChessState, ChessMove>(
       session: _session,
-      gameName: 'Chess',
+      gameName: l10n.appTitle,
       accentColor: Colors.brown[700],
       onExit: () => Navigator.of(context).pop(),
       gameBoard: ListenableBuilder(

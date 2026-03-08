@@ -1,0 +1,1 @@
+chess,multiplayer,bluetooth,board game,strategy,offline,nearby,friends,classic

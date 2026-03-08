@@ -1,0 +1,40 @@
+default_platform(:ios)
+
+# ─── iOS ──────────────────────────────────────────────────────────────────────
+
+platform :ios do
+  desc "Upload localized App Store metadata (name, subtitle, description, keywords, etc.)"
+  lane :update_metadata do
+    deliver(
+      skip_binary_upload: true,   # Only update metadata, do not upload a new build
+      skip_screenshots: true,     # Set to false if you also want to manage screenshots
+      force: true,                # Skip HTML preview prompt
+      metadata_path: "./fastlane/metadata/ios",
+      api_key_path: "fastlane/app-store-connect-api-key.json" # Replace with your API key path
+    )
+  end
+end
+
+# ─── Android ──────────────────────────────────────────────────────────────────
+
+platform :android do
+  desc "Upload localized Google Play Store metadata (title, descriptions, changelogs, etc.)"
+  lane :update_metadata do
+    supply(
+      skip_upload_apk: true,          # Only update metadata, do not upload a new APK/AAB
+      skip_upload_aab: true,
+      skip_upload_images: true,       # Set to false if you also want to manage screenshots
+      skip_upload_screenshots: true,
+      metadata_path: "./fastlane/metadata/android",
+      json_key: "fastlane/google-play-key.json"
+    )
+  end
+end
+
+# ─── All Platforms ────────────────────────────────────────────────────────────
+
+desc "Upload metadata to both App Store and Google Play"
+lane :update_all_metadata do
+  ios update_metadata
+  android update_metadata
+end

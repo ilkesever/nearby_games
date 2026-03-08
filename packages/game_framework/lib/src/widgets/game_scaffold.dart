@@ -2,40 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../game_session.dart';
 import '../game_state.dart';
+import '../l10n/game_framework_localizations.dart';
 
 /// Shared scaffold for all games.
-///
-/// Provides consistent game chrome including:
-/// - Player names and turn indicator
-/// - Game status bar (whose turn, game over, etc.)
-/// - Action buttons (resign, draw, undo)
-/// - Connection status indicator
-///
-/// Games plug their own board widget into [gameBoard].
-///
-/// Usage:
-/// ```dart
-/// GameScaffold(
-///   session: gameSession,
-///   gameName: 'Chess',
-///   gameBoard: ChessBoardWidget(state: gameSession.state),
-///   accentColor: Colors.brown,
-/// )
-/// ```
 class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
-  /// The game session.
   final GameSession<TState, TMove> session;
-
-  /// The game name (shown in app bar).
   final String gameName;
-
-  /// The main game board widget.
   final Widget gameBoard;
-
-  /// Optional accent color.
   final Color? accentColor;
-
-  /// Called when the user wants to go back.
   final VoidCallback? onExit;
 
   const GameScaffold({
@@ -50,6 +24,7 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = accentColor ?? Theme.of(context).primaryColor;
+    final l10n = GameFrameworkLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,16 +33,18 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
         title: Text(gameName),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => _showExitDialog(context),
+          onPressed: () => _showExitDialog(context, l10n),
         ),
         actions: [
           if (session.isPlaying)
             PopupMenuButton<String>(
-              onSelected: (value) => _handleAction(context, value),
+              onSelected: (value) => _handleAction(context, value, l10n),
               itemBuilder: (_) => [
-                const PopupMenuItem(value: 'resign', child: Text('Resign')),
-                const PopupMenuItem(value: 'draw', child: Text('Offer Draw')),
-                const PopupMenuItem(value: 'undo', child: Text('Request Undo')),
+                PopupMenuItem(value: 'resign', child: Text(l10n.gameResign)),
+                PopupMenuItem(
+                    value: 'draw', child: Text(l10n.gameOfferDraw)),
+                PopupMenuItem(
+                    value: 'undo', child: Text(l10n.gameRequestUndo)),
               ],
             ),
         ],
@@ -78,29 +55,24 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
           builder: (context, _) {
             return Column(
               children: [
-                // Remote player info
                 _PlayerBar(
-                  name: session.remotePlayer?.name ?? 'Opponent',
+                  name: session.remotePlayer?.name ??
+                      l10n.gameOpponent,
                   isActive: !session.isMyTurn && session.isPlaying,
                   accentColor: accent,
                   isLocal: false,
+                  turnLabel: l10n.gameTurn,
                 ),
-
-                // Status bar
-                _StatusBar(session: session, accentColor: accent),
-
-                // Game board (the main content)
-                // Center gives AspectRatio a loose constraint so the board
-                // always renders as a perfect square, regardless of the
-                // surrounding chrome height (player bars, status bar, etc.).
+                _StatusBar(
+                    session: session,
+                    accentColor: accent),
                 Expanded(child: Center(child: gameBoard)),
-
-                // Local player info
                 _PlayerBar(
-                  name: session.localPlayer?.name ?? 'You',
+                  name: session.localPlayer?.name ?? l10n.gameYou,
                   isActive: session.isMyTurn && session.isPlaying,
                   accentColor: accent,
                   isLocal: true,
+                  turnLabel: l10n.gameTurn,
                 ),
               ],
             );
@@ -110,33 +82,35 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
     );
   }
 
-  void _handleAction(BuildContext context, String action) {
+  void _handleAction(
+      BuildContext context, String action, GameFrameworkLocalizations l10n) {
     switch (action) {
       case 'resign':
-        _showResignDialog(context);
+        _showResignDialog(context, l10n);
       case 'draw':
         session.offerDraw();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Draw offer sent')),
+          SnackBar(content: Text(l10n.gameDrawOfferSent)),
         );
       case 'undo':
         session.requestUndo();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Undo request sent')),
+          SnackBar(content: Text(l10n.gameUndoRequestSent)),
         );
     }
   }
 
-  void _showResignDialog(BuildContext context) {
+  void _showResignDialog(
+      BuildContext context, GameFrameworkLocalizations l10n) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Resign?'),
-        content: const Text('Are you sure you want to resign this game?'),
+        title: Text(l10n.gameResignTitle),
+        content: Text(l10n.gameResignContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.gameCancel),
           ),
           TextButton(
             onPressed: () {
@@ -144,14 +118,15 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
               session.resign();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Resign'),
+            child: Text(l10n.gameResign),
           ),
         ],
       ),
     );
   }
 
-  void _showExitDialog(BuildContext context) {
+  void _showExitDialog(
+      BuildContext context, GameFrameworkLocalizations l10n) {
     if (!session.isPlaying) {
       onExit?.call();
       return;
@@ -160,13 +135,12 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Leave Game?'),
-        content: const Text(
-            'Leaving will end the current game. Are you sure?'),
+        title: Text(l10n.gameLeaveTitle),
+        content: Text(l10n.gameLeaveContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Stay'),
+            child: Text(l10n.gameStay),
           ),
           TextButton(
             onPressed: () {
@@ -175,7 +149,7 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
               onExit?.call();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Leave'),
+            child: Text(l10n.gameLeave),
           ),
         ],
       ),
@@ -183,21 +157,23 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
   }
 }
 
-// ==========================================================================
+// =============================================================================
 // HELPER WIDGETS
-// ==========================================================================
+// =============================================================================
 
 class _PlayerBar extends StatelessWidget {
   final String name;
   final bool isActive;
   final Color accentColor;
   final bool isLocal;
+  final String turnLabel;
 
   const _PlayerBar({
     required this.name,
     required this.isActive,
     required this.accentColor,
     required this.isLocal,
+    required this.turnLabel,
   });
 
   @override
@@ -217,8 +193,7 @@ class _PlayerBar extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor:
-                isActive ? accentColor : Colors.grey[300],
+            backgroundColor: isActive ? accentColor : Colors.grey[300],
             child: Icon(
               isLocal ? Icons.person : Icons.person_outline,
               size: 18,
@@ -238,14 +213,15 @@ class _PlayerBar extends StatelessWidget {
           ),
           if (isActive)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: accentColor,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
-                'Turn',
-                style: TextStyle(
+              child: Text(
+                turnLabel,
+                style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.bold),
@@ -265,25 +241,28 @@ class _StatusBar<TState extends GameState, TMove> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = GameFrameworkLocalizations.of(context);
     String statusText;
     Color statusColor;
     IconData statusIcon;
 
     switch (session.status) {
       case GameSessionStatus.waiting:
-        statusText = 'Waiting for game to start...';
+        statusText = l10n.gameWaiting;
         statusColor = Colors.orange;
         statusIcon = Icons.hourglass_empty;
       case GameSessionStatus.playing:
-        statusText = session.isMyTurn ? 'Your turn' : "Opponent's turn";
+        statusText =
+            session.isMyTurn ? l10n.gameYourTurn : l10n.gameOpponentTurn;
         statusColor = session.isMyTurn ? accentColor : Colors.grey;
-        statusIcon = session.isMyTurn ? Icons.touch_app : Icons.hourglass_top;
+        statusIcon =
+            session.isMyTurn ? Icons.touch_app : Icons.hourglass_top;
       case GameSessionStatus.gameOver:
-        statusText = 'Game Over';
+        statusText = l10n.gameOver;
         statusColor = Colors.deepPurple;
         statusIcon = Icons.flag;
       case GameSessionStatus.disconnected:
-        statusText = 'Connection lost';
+        statusText = l10n.gameConnectionLost;
         statusColor = Colors.red;
         statusIcon = Icons.bluetooth_disabled;
     }

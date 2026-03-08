@@ -1,0 +1,1 @@
+¡Lanzamiento inicial de Ajedrez Cercano — juega al ajedrez con cualquiera cercano por Bluetooth!

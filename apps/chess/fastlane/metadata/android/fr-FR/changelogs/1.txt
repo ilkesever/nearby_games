@@ -1,0 +1,1 @@
+Version initiale d'Échecs à Proximité — jouez aux échecs avec n'importe qui à proximité via Bluetooth !

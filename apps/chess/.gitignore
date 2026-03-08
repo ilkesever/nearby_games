@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Fastlane API keys (sensitive — never commit these)
+fastlane/app-store-connect-api-key.json
+fastlane/google-play-key.json

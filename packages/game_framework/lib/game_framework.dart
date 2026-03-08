@@ -12,3 +12,4 @@ export 'src/game_session.dart';
 export 'src/game_player.dart';
 export 'src/widgets/lobby_screen.dart';
 export 'src/widgets/game_scaffold.dart';
+export 'src/l10n/game_framework_localizations.dart';

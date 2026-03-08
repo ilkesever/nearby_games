@@ -76,3 +76,4 @@ app.*.map.json
 
 # Melos
 .melos/
+/apps/chess/vendor/bundle/*

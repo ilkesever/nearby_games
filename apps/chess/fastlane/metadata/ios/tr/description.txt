@@ -1,0 +1,10 @@
+Yakın Satranç, Bluetooth üzerinden internet bağlantısı olmadan çevrenizdekilere klasik bir satranç oyunu meydan okumanızı sağlar.
+
+Uygulamayı açın, yakınlardaki oyuncuları keşfedin ve saniyeler içinde bir maç başlatın. Her yerde yüz yüze satranç oynayın.
+
+Özellikler:
+• Bluetooth ile yakındaki oyuncularla oynayın
+• İnternet bağlantısı gerekmez
+• Güzel tahta ile klasik satranç kuralları
+• Hızlı ve kolay eşleştirme
+• Her yerde çalışır — kafeler, parklar, seyahat

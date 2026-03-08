@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:game_framework/game_framework.dart';
 import 'package:nearby_ble/nearby_ble.dart';
 
+import 'src/l10n/app_localizations.dart';
 import 'ui/chess_game_screen.dart';
 import 'ui/local_game_screen.dart';
 
@@ -17,7 +19,7 @@ class ChessApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Nearby Chess',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorSchemeSeed: Colors.brown,
@@ -27,6 +29,26 @@ class ChessApp extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
       ),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GameFrameworkLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('zh'),
+        Locale('hi'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('ar'),
+        Locale('bn'),
+        Locale('ru'),
+        Locale('pt'),
+        Locale('id'),
+        Locale('tr'),
+      ],
       home: const HomeScreen(),
     );
   }
@@ -47,51 +69,28 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _bleInitializing = false;
   String _playerName = 'Player';
 
-  // Subscription kept alive so the button reacts to BLE state changes
-  // (e.g. user toggles Bluetooth off/on while the app is open).
   StreamSubscription<bool>? _bleAvailabilitySub;
 
   @override
   void initState() {
     super.initState();
-    // BLE is initialized lazily — only when user taps "Play Nearby".
-    // This avoids triggering the iOS Bluetooth permission dialog on startup.
   }
 
-  /// Initialize BLE lazily. Called when user wants to use BLE features.
-  ///
-  /// On iOS, creating CBCentralManager starts CoreBluetooth's state machine.
-  /// The state (and any permission prompt) resolves asynchronously via the
-  /// centralManagerDidUpdateState delegate callback, which now emits a
-  /// [BleService.onBleAvailabilityChanged] event.
-  ///
-  /// We subscribe to that stream *before* calling initialize() so we never
-  /// miss the first event — even if the user has to respond to the iOS
-  /// Bluetooth permission dialog before the state settles.
   Future<bool> _ensureBleReady() async {
     if (_bleChecked) return _bleAvailable;
     if (_bleInitializing) return false;
     setState(() => _bleInitializing = true);
 
     try {
-      // Subscribe before initialize() — CoreBluetooth may fire its first
-      // state update very quickly on subsequent launches.
       final completer = Completer<bool>();
-      _bleAvailabilitySub = _bleService.onBleAvailabilityChanged.listen((available) {
-        // Resolve the one-time wait on the first state event.
+      _bleAvailabilitySub =
+          _bleService.onBleAvailabilityChanged.listen((available) {
         if (!completer.isCompleted) completer.complete(available);
-        // Keep updating the button if BLE state changes later
-        // (e.g. user flips Bluetooth in Control Center while app is open).
         if (mounted) setState(() => _bleAvailable = available);
       });
 
       await _bleService.initialize();
 
-      // Wait for CoreBluetooth to report its settled state.
-      // • Subsequent launches (permission already granted): resolves in ~ms.
-      // • First launch: resolves after the user responds to the iOS
-      //   Bluetooth permission dialog (could take several seconds).
-      // • Timeout fallback: direct isAvailable() call after 30 s.
       final available = await completer.future.timeout(
         const Duration(seconds: 30),
         onTimeout: () => _bleService.isAvailable(),
@@ -132,12 +131,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToLobby() {
+    final l10n = AppLocalizations.of(context);
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => LobbyScreen(
           gameType: 'chess',
-          gameName: 'Chess',
+          gameName: l10n.appTitle,
           bleService: _bleService,
           playerName: _playerName,
           accentColor: Colors.brown[700],
@@ -161,6 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -179,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 32),
               Text(
-                'Nearby Chess',
+                l10n.appTitle,
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.brown[800],
@@ -187,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Play chess with someone nearby\nNo internet required',
+                l10n.homeTagline,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
@@ -196,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Player name input
               TextField(
                 decoration: InputDecoration(
-                  labelText: 'Your Name',
+                  labelText: l10n.homeYourName,
                   prefixIcon: const Icon(Icons.person),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -221,7 +223,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (_bleAvailable) {
                                 _navigateToLobby();
                               } else {
-                                // Lazy-init BLE on first tap
                                 final ready = await _ensureBleReady();
                                 if (ready && mounted) {
                                   _navigateToLobby();
@@ -240,12 +241,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       : const Icon(Icons.bluetooth, size: 24),
                   label: Text(
                     _bleInitializing
-                        ? 'Initializing Bluetooth...'
+                        ? l10n.homeInitializingBluetooth
                         : (_bleChecked
                             ? (_bleAvailable
-                                ? 'Play Nearby'
-                                : 'Bluetooth unavailable')
-                            : 'Play Nearby'),
+                                ? l10n.homePlayNearby
+                                : l10n.homeBluetoothUnavailable)
+                            : l10n.homePlayNearby),
                     style: const TextStyle(fontSize: 18),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -268,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: _navigateToLocalGame,
                   icon: Icon(Icons.people, size: 24, color: Colors.brown[700]),
                   label: Text(
-                    'Local Play (Pass & Play)',
+                    l10n.homeLocalPlay,
                     style: TextStyle(fontSize: 18, color: Colors.brown[700]),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -289,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(Icons.bluetooth, size: 16, color: Colors.grey[400]),
                   const SizedBox(width: 4),
                   Text(
-                    'Uses Bluetooth • Works offline',
+                    l10n.homeBluetoothInfo,
                     style: TextStyle(color: Colors.grey[400], fontSize: 13),
                   ),
                 ],

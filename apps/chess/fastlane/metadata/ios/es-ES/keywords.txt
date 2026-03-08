@@ -1,0 +1,1 @@
+ajedrez,multijugador,bluetooth,juego de mesa,estrategia,sin conexión,cercano,amigos,clásico

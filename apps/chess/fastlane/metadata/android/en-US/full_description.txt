@@ -1,0 +1,10 @@
+Nearby Chess lets you challenge friends and players around you to a classic game of chess over Bluetooth — no internet required.
+
+Simply open the app, discover nearby players, and start a match in seconds. Enjoy the timeless strategy of chess face-to-face with anyone around you.
+
+Features:
+• Play chess with nearby players via Bluetooth
+• No internet connection required
+• Classic chess rules with a beautiful board
+• Fast and easy matchmaking
+• Works anywhere — cafes, parks, travel
