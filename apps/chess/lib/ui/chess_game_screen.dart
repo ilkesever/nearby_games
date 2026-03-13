@@ -5,6 +5,7 @@ import 'package:nearby_ble/nearby_ble.dart';
 import '../game/chess_engine.dart';
 import '../game/chess_move.dart';
 import '../game/chess_state.dart';
+import '../services/rating_service.dart';
 import '../src/l10n/app_localizations.dart';
 import 'chess_board_widget.dart';
 
@@ -51,6 +52,11 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
       setState(() {
         _lastMove = move;
       });
+    });
+
+    _session.statusStream.listen((status) {
+      if (status != GameSessionStatus.gameOver) return;
+      RatingService().recordGameCompleted();
     });
 
     _session.errorStream.listen((event) {

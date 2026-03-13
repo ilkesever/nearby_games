@@ -1,7 +1,7 @@
 name: chess_app
 description: Nearby multiplayer chess game using BLE.
 publish_to: none
-version: 1.0.0
+version: 1.1.0+2
 
 environment:
   sdk: ^3.11.0
@@ -19,6 +19,8 @@ dependencies:
   chess: ^0.8.1
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.17
+  in_app_review: ^2.0.9
+  shared_preferences: ^2.3.0
 
 dev_dependencies:
   flutter_test:

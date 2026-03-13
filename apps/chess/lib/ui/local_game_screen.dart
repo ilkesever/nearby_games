@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../game/chess_engine.dart';
 import '../game/chess_move.dart';
 import '../game/chess_state.dart';
+import '../services/rating_service.dart';
 import '../src/l10n/app_localizations.dart';
 import 'chess_board_widget.dart';
 
@@ -32,6 +33,9 @@ class _LocalGameScreenState extends State<LocalGameScreen> {
       _state = _engine.applyMove(_state, move);
       _lastMove = move;
     });
+    if (_state.isGameOver) {
+      RatingService().recordGameCompleted();
+    }
   }
 
   void _resetGame() {
