@@ -36,6 +36,6 @@ end
 
 desc "Upload metadata to both App Store and Google Play"
 lane :update_all_metadata do
-  ios update_metadata
-  android update_metadata
+  sh("bundle exec fastlane ios update_metadata")
+  sh("bundle exec fastlane android update_metadata")
 end
