@@ -1,0 +1,88 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Chinese (`zh`).
+class AppLocalizationsZh extends AppLocalizations {
+  AppLocalizationsZh([String locale = 'zh']) : super(locale);
+
+  @override
+  String get appTitle => '附近双陆棋';
+
+  @override
+  String get homeTagline => '与附近的人下双陆棋\n无需网络';
+
+  @override
+  String get homeYourName => '您的名字';
+
+  @override
+  String get homeInitializingBluetooth => '正在初始化蓝牙...';
+
+  @override
+  String get homePlayNearby => '附近对战';
+
+  @override
+  String get homeBluetoothUnavailable => '蓝牙不可用';
+
+  @override
+  String get homeLocalPlay => '本地对战（传递游玩）';
+
+  @override
+  String get homeBluetoothInfo => '使用蓝牙 • 离线可用';
+
+  @override
+  String get localGameTitle => '双陆棋 — 本地对战';
+
+  @override
+  String get localGameNewGame => '新游戏';
+
+  @override
+  String get localGameRollDice => '掷骰子';
+
+  @override
+  String get localGameWhiteWins => '白棋获胜！';
+
+  @override
+  String get localGameBlackWins => '黑棋获胜！';
+
+  @override
+  String get localGameWhiteTurn => '白棋的回合';
+
+  @override
+  String get localGameBlackTurn => '黑棋的回合';
+
+  @override
+  String get localGameBar => '棋栏';
+
+  @override
+  String get localGameBearOff => '退出棋盘';
+
+  @override
+  String get localGameNoMoves => '没有合法移动 — 跳过回合';
+
+  @override
+  String get localGamePlayAgain => '再玩一局';
+
+  @override
+  String get drawOfferedTitle => '提出和棋';
+
+  @override
+  String get drawOfferedContent => '对手提出和棋。接受？';
+
+  @override
+  String get drawDecline => '拒绝';
+
+  @override
+  String get drawAccept => '接受';
+
+  @override
+  String get undoRequestedTitle => '请求悔棋';
+
+  @override
+  String get undoRequestedContent => '对手想悔棋。允许？';
+
+  @override
+  String get undoAllow => '允许';
+}
