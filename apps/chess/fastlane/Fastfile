@@ -19,6 +19,16 @@ end
 # ─── Android ──────────────────────────────────────────────────────────────────
 
 platform :android do
+  desc "Build AAB and upload to Google Play internal testing track"
+  lane :release do
+    sh("cd .. && flutter build appbundle --release --split-debug-info=build/debug-info")
+    upload_to_play_store(
+      track: "internal",
+      aab: "build/app/outputs/bundle/release/app-release.aab",
+      json_key: "fastlane/google-play-key.json"
+    )
+  end
+
   desc "Upload localized Google Play Store metadata (title, descriptions, changelogs, etc.)"
   lane :update_metadata do
     supply(

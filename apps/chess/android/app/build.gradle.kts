@@ -1,8 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -31,17 +40,12 @@ android {
     }
 
     signingConfigs {
-        // IMPORTANT: Before releasing to the Play Store, create a release keystore and
-        // configure it here (or via environment variables / key.properties).
-        // See: https://docs.flutter.dev/deployment/android#signing-the-app
-        //
-        // Example using a key.properties file:
-        // create("release") {
-        //     keyAlias = keystoreProperties["keyAlias"] as String
-        //     keyPassword = keystoreProperties["keyPassword"] as String
-        //     storeFile = file(keystoreProperties["storeFile"] as String)
-        //     storePassword = keystoreProperties["storePassword"] as String
-        // }
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = file(keystoreProperties.getProperty("storeFile"))
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
     }
 
     buildTypes {
@@ -50,9 +54,7 @@ android {
             isMinifyEnabled = false
         }
         release {
-            // ⚠️ Replace with your release signingConfig before submitting to the Play Store.
-            // signingConfig = signingConfigs.getByName("release")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             isShrinkResources = false
             isMinifyEnabled = false
         }
