@@ -39,6 +39,14 @@ Upload localized App Store metadata (name, subtitle, description, keywords, etc.
 
 ## Android
 
+### android release
+
+```sh
+[bundle exec] fastlane android release
+```
+
+Build AAB and upload to Google Play internal testing track
+
 ### android update_metadata
 
 ```sh
