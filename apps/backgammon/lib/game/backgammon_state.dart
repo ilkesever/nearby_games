@@ -29,6 +29,13 @@ class PointState {
 
 enum GamePhase { rolling, moving, gameOver }
 
+/// Win classification. Only meaningful when [BackgammonState.winner] is non-null.
+///
+/// - [normal]     Loser has borne off at least one checker.
+/// - [gammon]     Loser has borne off zero checkers.
+/// - [backgammon] Loser has a checker on the bar or in the winner's home board.
+enum BackgammonWinType { normal, gammon, backgammon }
+
 class BackgammonState extends GameState {
   // index 0 unused; indices 1-24 are the board points
   final List<PointState> points;
@@ -83,6 +90,25 @@ class BackgammonState extends GameState {
     if (whiteBorneOff == 15) return BackgammonColor.white;
     if (blackBorneOff == 15) return BackgammonColor.black;
     return null;
+  }
+
+  /// Win type. Returns null if the game is not over.
+  BackgammonWinType? get winType {
+    final w = winner;
+    if (w == null) return null;
+    final loserBorneOff =
+        w == BackgammonColor.white ? blackBorneOff : whiteBorneOff;
+    final loserBar = w == BackgammonColor.white ? blackBar : whiteBar;
+    // Winner's home board: where winner bears off from.
+    // White home = pts 1-6 (white moves 24→1); Black home = pts 19-24.
+    final homeStart = w == BackgammonColor.white ? 1 : 19;
+    final homeEnd = w == BackgammonColor.white ? 6 : 24;
+    final loserInWinnerHome = points
+        .sublist(homeStart, homeEnd + 1)
+        .any((p) => p.color == w.opposite && p.count > 0);
+    if (loserBar > 0 || loserInWinnerHome) return BackgammonWinType.backgammon;
+    if (loserBorneOff == 0) return BackgammonWinType.gammon;
+    return BackgammonWinType.normal;
   }
 
   @override

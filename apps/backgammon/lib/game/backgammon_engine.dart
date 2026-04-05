@@ -173,6 +173,41 @@ class BackgammonEngine
     return dests.map((to) => CheckerMove(from: fromPoint, to: to)).toList();
   }
 
+  /// Returns combined (multi-die) destinations reachable by moving the checker
+  /// at [fromPoint] using more than one die in sequence.
+  /// Maps final destination point → the sub-sequence of checker moves for that
+  /// checker (e.g. pt13 with dice [4,2] → {7: [(13→9), (9→7)]}).
+  /// Destinations already reachable with a single die are excluded.
+  Map<int, List<CheckerMove>> getCombinedDestinations(
+      BackgammonState state, int fromPoint, List<int> dice) {
+    final singleDieDests = getValidMovesForPoint(state, fromPoint, dice)
+        .map((cm) => cm.to)
+        .toSet();
+    final allMoves = getValidMoves(state.copyWith(remainingDice: dice));
+    final result = <int, List<CheckerMove>>{};
+
+    for (final move in allMoves) {
+      var track = fromPoint;
+      final movesForChecker = <CheckerMove>[];
+
+      for (final cm in move.checkerMoves) {
+        if (cm.from == track) {
+          track = cm.to;
+          movesForChecker.add(cm);
+        }
+      }
+
+      // Only include if checker made 2+ moves and final dest is new
+      if (movesForChecker.length > 1 &&
+          !singleDieDests.contains(track) &&
+          !result.containsKey(track)) {
+        result[track] = List.unmodifiable(movesForChecker);
+      }
+    }
+
+    return result;
+  }
+
   // ---------------------------------------------------------------------------
   // Public helper used by UI to advance intermediate board state mid-turn
   // ---------------------------------------------------------------------------

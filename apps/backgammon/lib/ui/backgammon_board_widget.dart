@@ -35,6 +35,8 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
   int? _selectedPoint; // null = none; 0 = bar
   List<CheckerMove> _pendingMoves = [];
   List<CheckerMove> _validDestinations = [];
+  // Combined (multi-die) destinations: final point → sequence of checker moves
+  Map<int, List<CheckerMove>> _combinedMoveMap = {};
   // Tracks the board state after each pending checker move so that
   // subsequent move hints are computed on the correct intermediate position.
   late BackgammonState _currentBoardState;
@@ -59,6 +61,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     _selectedPoint = null;
     _pendingMoves = [];
     _validDestinations = [];
+    _combinedMoveMap = {};
     _currentBoardState = widget.state;
   }
 
@@ -93,7 +96,19 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       _pendingMoves = [];
       _selectedPoint = null;
       _validDestinations = [];
+      _combinedMoveMap = {};
     });
+
+    // Auto-skip if no valid moves exist with these dice
+    final hasNoMoves = widget.engine
+        .getValidMoves(_currentBoardState.copyWith(
+          phase: GamePhase.moving,
+          remainingDice: dice,
+        ))
+        .isEmpty;
+    if (hasNoMoves) {
+      Future.delayed(const Duration(milliseconds: 800), _submit);
+    }
   }
 
   void _onPointTap(int point) {
@@ -102,10 +117,15 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
 
     // If a point is already selected
     if (_selectedPoint != null) {
-      // Tapping a valid destination
+      // Tapping a valid single-die destination
       final dest = _validDestinations.where((d) => d.to == point).toList();
       if (dest.isNotEmpty) {
         _makeCheckerMove(dest.first);
+        return;
+      }
+      // Tapping a combined (multi-die) destination
+      if (_combinedMoveMap.containsKey(point)) {
+        _makeCombinedMove(_combinedMoveMap[point]!);
         return;
       }
       // Tapping same point = deselect
@@ -113,6 +133,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
         setState(() {
           _selectedPoint = null;
           _validDestinations = [];
+          _combinedMoveMap = {};
         });
         return;
       }
@@ -138,6 +159,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       setState(() {
         _selectedPoint = null;
         _validDestinations = [];
+        _combinedMoveMap = {};
       });
       return;
     }
@@ -149,10 +171,21 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
 
     final dests =
         widget.engine.getValidMovesForPoint(movingState, point, _remainingDice);
+    final combined = _remainingDice.length > 1
+        ? widget.engine
+            .getCombinedDestinations(movingState, point, _remainingDice)
+        : <int, List<CheckerMove>>{};
+
+    // Auto-execute if the only possible destination is bearing off
+    if (dests.isNotEmpty && dests.every((d) => d.to == 25) && combined.isEmpty) {
+      _makeCheckerMove(dests.first);
+      return;
+    }
 
     setState(() {
       _selectedPoint = point;
       _validDestinations = dests;
+      _combinedMoveMap = combined;
     });
   }
 
@@ -183,12 +216,60 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       _currentBoardState = widget.engine.applyCheckerMove(_currentBoardState, cm);
       _selectedPoint = null;
       _validDestinations = [];
+      _combinedMoveMap = {};
     });
+  }
 
-    // Auto-submit when all dice used
-    if (_remainingDice.isEmpty) {
-      _submit();
-    }
+  /// Executes a combined (multi-die) move sequence in one setState.
+  void _makeCombinedMove(List<CheckerMove> moves) {
+    setState(() {
+      for (final cm in moves) {
+        final color = _currentBoardState.activeColor;
+        int neededDie;
+        if (cm.from == 0) {
+          neededDie = color == BackgammonColor.white ? (25 - cm.to) : cm.to;
+        } else if (cm.to == 25) {
+          neededDie = color == BackgammonColor.white ? cm.from : (25 - cm.from);
+        } else {
+          neededDie = color == BackgammonColor.white
+              ? (cm.from - cm.to)
+              : (cm.to - cm.from);
+        }
+        final remaining = List<int>.from(_rolledDice);
+        for (final d in _usedDice) {
+          remaining.remove(d);
+        }
+        int dieUsed = neededDie;
+        if (!remaining.contains(neededDie) && cm.to == 25) {
+          final overshoots = remaining.where((d) => d > neededDie).toList()
+            ..sort();
+          if (overshoots.isNotEmpty) dieUsed = overshoots.first;
+        }
+        _usedDice.add(dieUsed);
+        _pendingMoves.add(cm);
+        _currentBoardState =
+            widget.engine.applyCheckerMove(_currentBoardState, cm);
+      }
+      _selectedPoint = null;
+      _validDestinations = [];
+      _combinedMoveMap = {};
+    });
+  }
+
+  void _undo() {
+    if (_pendingMoves.isEmpty) return;
+    setState(() {
+      _pendingMoves.removeLast();
+      _usedDice.removeLast();
+      // Replay remaining moves from canonical state to recompute intermediate state
+      _currentBoardState = widget.state;
+      for (final move in _pendingMoves) {
+        _currentBoardState = widget.engine.applyCheckerMove(_currentBoardState, move);
+      }
+      _selectedPoint = null;
+      _validDestinations = [];
+      _combinedMoveMap = {};
+    });
   }
 
   void _submit() {
@@ -205,9 +286,8 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final state = widget.state;
     final isRolling =
-        widget.interactive && state.phase == GamePhase.rolling && _rolledDice.isEmpty;
+        widget.interactive && widget.state.phase == GamePhase.rolling && _rolledDice.isEmpty;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -234,10 +314,11 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
                     _handleBoardTap(details.localPosition, boardWidth, boardHeight),
                 child: CustomPaint(
                   painter: _BoardPainter(
-                    state: state,
+                    state: _currentBoardState,
                     flipped: widget.flipped,
                     selectedPoint: _selectedPoint,
                     validDests: _validDestinations.map((m) => m.to).toSet(),
+                    combinedDests: _combinedMoveMap.keys.toSet(),
                     lastMove: widget.lastMove,
                   ),
                   child: const SizedBox.expand(),
@@ -260,32 +341,44 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
 
   Widget _buildBorneOffRow(BackgammonColor color, double width) {
     final count = color == BackgammonColor.white
-        ? widget.state.whiteBorneOff
-        : widget.state.blackBorneOff;
+        ? _currentBoardState.whiteBorneOff
+        : _currentBoardState.blackBorneOff;
     final label = color == BackgammonColor.white ? 'White' : 'Black';
     final checkerColor =
         color == BackgammonColor.white ? Colors.white : Colors.brown[900]!;
+    final canBearOff = _validDestinations.any((d) => d.to == 25);
 
-    return SizedBox(
-      width: width,
-      height: 28,
-      child: Row(
-        children: [
-          const SizedBox(width: 8),
-          Text('$label bore off: ',
-              style: TextStyle(fontSize: 12, color: Colors.brown[700])),
-          for (int i = 0; i < count; i++)
-            Container(
-              width: 14,
-              height: 14,
-              margin: const EdgeInsets.only(right: 2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: checkerColor,
-                border: Border.all(color: Colors.brown[400]!, width: 1),
+    return GestureDetector(
+      onTap: () => _onPointTap(25),
+      child: Container(
+        width: width,
+        height: 28,
+        decoration: canBearOff
+            ? BoxDecoration(
+                border: Border.all(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.8),
+                    width: 2),
+                borderRadius: BorderRadius.circular(4),
+              )
+            : null,
+        child: Row(
+          children: [
+            const SizedBox(width: 8),
+            Text('$label bore off: ',
+                style: TextStyle(fontSize: 12, color: Colors.brown[700])),
+            for (int i = 0; i < count; i++)
+              Container(
+                width: 14,
+                height: 14,
+                margin: const EdgeInsets.only(right: 2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: checkerColor,
+                  border: Border.all(color: Colors.brown[400]!, width: 1),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -308,20 +401,42 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
 
     if (_rolledDice.isEmpty) return const SizedBox.shrink();
 
+    final usedCopy = List<int>.from(_usedDice);
+    final usedFlags = _rolledDice.map((d) {
+      final idx = usedCopy.indexOf(d);
+      if (idx != -1) {
+        usedCopy.removeAt(idx);
+        return true;
+      }
+      return false;
+    }).toList();
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ..._rolledDice.asMap().entries.map((e) {
           final i = e.key;
           final d = e.value;
-          final used = i < _usedDice.length;
+          final used = usedFlags[i];
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: _DiceFaceWidget(value: d, used: used),
           );
         }),
+        if (_pendingMoves.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: _undo,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.brown[700],
+              side: BorderSide(color: Colors.brown[400]!),
+              minimumSize: const Size(64, 40),
+            ),
+            child: const Text('Undo'),
+          ),
+        ],
         if (_canSubmit) ...[
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           ElevatedButton(
             onPressed: _submit,
             style: ElevatedButton.styleFrom(
@@ -390,6 +505,7 @@ class _BoardPainter extends CustomPainter {
   final bool flipped;
   final int? selectedPoint;
   final Set<int> validDests;
+  final Set<int> combinedDests;
   final BackgammonMove? lastMove;
 
   const _BoardPainter({
@@ -397,6 +513,7 @@ class _BoardPainter extends CustomPainter {
     required this.flipped,
     required this.selectedPoint,
     required this.validDests,
+    required this.combinedDests,
     this.lastMove,
   });
 
@@ -431,7 +548,7 @@ class _BoardPainter extends CustomPainter {
   //         top-left    = 13,14,15,16,17,18  top-right = 19,20,21,22,23,24
   double _pointX(int pt, double w) {
     final barCenter = w / 2;
-    final halfW = (barCenter - w * 0.04) / 6; // width per point slot
+    final halfW = (barCenter - w * 0.02 - w * 0.01) / 6; // width per point slot
 
     // Logical position before flipping:
     // pt 1: rightmost bottom-right → col index 5 on right side
@@ -452,11 +569,11 @@ class _BoardPainter extends CustomPainter {
     } else if (effectivePt >= 7 && effectivePt <= 12) {
       // Bottom left: pt12 at leftmost (mirrors pt13 above), pt7 nearest bar
       final col = 12 - effectivePt; // 0=pt12(leftmost), 5=pt7(nearest bar)
-      return w * 0.02 + col * halfW + halfW / 2;
+      return w * 0.01 + col * halfW + halfW / 2;
     } else if (effectivePt >= 13 && effectivePt <= 18) {
       // Top left
       final col = effectivePt - 13; // 0-5, 0=pt13=closest to left edge
-      return w * 0.02 + col * halfW + halfW / 2;
+      return w * 0.01 + col * halfW + halfW / 2;
     } else {
       // Top right (19-24)
       final col = effectivePt - 19; // 0-5, 0=pt19=closest to bar
@@ -467,6 +584,9 @@ class _BoardPainter extends CustomPainter {
   void _drawTriangles(Canvas canvas, double w, double h) {
     final highlightColor = const Color(0xFFFFEB3B).withValues(alpha: 0.7);
     final destColor = const Color(0xFF4CAF50).withValues(alpha: 0.8);
+    // Combined (multi-die) destinations shown in blue
+    final combinedDestColor = const Color(0xFF2196F3).withValues(alpha: 0.8);
+    final slotW = (w / 2 - w * 0.02 - w * 0.01) / 6;
 
     for (int pt = 1; pt <= 24; pt++) {
       final isTop = (pt >= 13 && pt <= 24);
@@ -480,12 +600,14 @@ class _BoardPainter extends CustomPainter {
         color = highlightColor;
       } else if (validDests.contains(pt)) {
         color = destColor;
+      } else if (combinedDests.contains(pt)) {
+        color = combinedDestColor;
       } else if (lastMove?.checkerMoves.any((m) => m.from == pt || m.to == pt) ??
           false) {
         color = baseColor.withValues(alpha: 0.6);
       }
 
-      _drawTriangle(canvas, _pointX(pt, w), isTop ? 0 : h, w / 13, h * 0.42,
+      _drawTriangle(canvas, _pointX(pt, w), isTop ? 0 : h, slotW, h * 0.42,
           isTop, color);
     }
   }
@@ -517,35 +639,21 @@ class _BoardPainter extends CustomPainter {
       final cx = _pointX(pt, w);
       final isTop = (pt >= 13 && pt <= 24);
       final checkerR = w / 26;
-      final maxVisible = 5;
       final count = p.count;
 
-      for (int i = 0; i < math.min(count, maxVisible); i++) {
-        final dy = isTop
-            ? checkerR + i * checkerR * 1.9
-            : h - checkerR - i * checkerR * 1.9;
-        _drawChecker(canvas, Offset(cx, dy), checkerR, p.color!);
-      }
+      // Compress spacing so all pieces fit within the triangle height
+      final triangleH = h * 0.42;
+      final idealSpacing = checkerR * 1.9;
+      final maxSpacing = count > 1
+          ? (triangleH - 2 * checkerR) / (count - 1)
+          : idealSpacing;
+      final spacing = math.min(idealSpacing, maxSpacing);
 
-      if (count > maxVisible) {
+      for (int i = 0; i < count; i++) {
         final dy = isTop
-            ? checkerR + maxVisible * checkerR * 1.9
-            : h - checkerR - maxVisible * checkerR * 1.9;
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: '+${count - maxVisible}',
-            style: TextStyle(
-              fontSize: checkerR * 1.2,
-              color: p.color == BackgammonColor.white
-                  ? Colors.brown[900]
-                  : Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        textPainter.paint(
-            canvas, Offset(cx - textPainter.width / 2, dy - textPainter.height / 2));
+            ? checkerR + i * spacing
+            : h - checkerR - i * spacing;
+        _drawChecker(canvas, Offset(cx, dy), checkerR, p.color!);
       }
     }
   }
@@ -555,34 +663,17 @@ class _BoardPainter extends CustomPainter {
     final r = w / 26;
 
     void drawBar(int count, BackgammonColor color, bool top) {
-      final visible = count.clamp(0, 4);
-      for (int i = 0; i < visible; i++) {
+      if (count == 0) return;
+      final idealSpacing = r * 2.1;
+      final maxSpacing = count > 1
+          ? (h * 0.8 - 2 * r) / (count - 1)
+          : idealSpacing;
+      final spacing = math.min(idealSpacing, maxSpacing);
+      for (int i = 0; i < count; i++) {
         final dy = top
-            ? h * 0.1 + i * r * 2.1
-            : h * 0.9 - i * r * 2.1;
+            ? h * 0.1 + r + i * spacing
+            : h * 0.9 - r - i * spacing;
         _drawChecker(canvas, Offset(barCx, dy), r, color);
-      }
-      if (count > 4) {
-        final dy = top
-            ? h * 0.1 + 4 * r * 2.1
-            : h * 0.9 - 4 * r * 2.1;
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: '+${count - 4}',
-            style: TextStyle(
-              fontSize: r * 1.2,
-              color: color == BackgammonColor.white
-                  ? Colors.brown[900]
-                  : Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        textPainter.paint(
-            canvas,
-            Offset(barCx - textPainter.width / 2,
-                dy - textPainter.height / 2));
       }
     }
 
@@ -622,6 +713,7 @@ class _BoardPainter extends CustomPainter {
       old.state != state ||
       old.selectedPoint != selectedPoint ||
       old.validDests != validDests ||
+      old.combinedDests != combinedDests ||
       old.flipped != flipped ||
       old.lastMove != lastMove;
 }

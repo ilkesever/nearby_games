@@ -633,4 +633,541 @@ void main() {
       expect(newState.phase, GamePhase.rolling);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Move count regression (adapted from timiles/backgammon + bungogood/bkgm)
+  // These lock the exact number of unique legal sequences for known positions.
+  // A change in count means a move-generation regression or intentional fix.
+  // ---------------------------------------------------------------------------
+
+  group('Move count regression', () {
+    // timiles AnalysisSpec: "Starting Position - 5&5 Roll: 15 possible sequences"
+    // Black at start: pt1(2), pt12(5), pt17(3), pt19(5).
+    // With die=5 only pt12→17 and pt17→22 are open (pt6 and pt24 are primed by white).
+    // 2^4 orderings of those two moves, minus the invalid BBBB (pt17 only has 3 checkers) = 15.
+    test('black starting position [5,5,5,5] → 15 unique sequences', () {
+      final state = BackgammonState.initial().copyWith(
+        activeColor: BackgammonColor.black,
+        phase: GamePhase.moving,
+        remainingDice: [5, 5, 5, 5],
+      );
+      final moves = engine.getValidMoves(state);
+      expect(moves.length, 15);
+    });
+
+    // 2 white checkers at pt10, dice [3,4]:
+    // First die options: 10→7 (die3) or 10→6 (die4).
+    // Second die from each: 2 more options each → 4 total unique ordered sequences.
+    test('2 white checkers at pt10, dice [3,4] → 4 unique sequences', () {
+      final pts = boardWith({10: (2, BackgammonColor.white)});
+      final state = stateWith(points: pts, remainingDice: [3, 4]);
+      final moves = engine.getValidMoves(state);
+      expect(moves.length, 4);
+    });
+
+    // 1 white checker at pt5, 14 borne off, dice [2,3]:
+    // Die2 first: 5→3, then die3: 3→off (exact). Seq1.
+    // Die3 first: 5→2, then die2: 2→off (exact). Seq2.
+    test('1 white at pt5, 14 borne off, dice [2,3] → 2 sequences', () {
+      final pts = boardWith({5: (1, BackgammonColor.white)});
+      final state =
+          stateWith(points: pts, whiteBorneOff: 14, remainingDice: [2, 3]);
+      final moves = engine.getValidMoves(state);
+      expect(moves.length, 2);
+    });
+
+    // Adapted from bkgm: single checker, both dice can bear off directly.
+    // White 1 checker at pt3, 14 borne off, dice [3,5]:
+    // Die3: pt3→off (exact). Die5: pt3→off (overshoot, no higher home checker). Both valid.
+    // Max sequence length = 1 (only 1 checker). Forced-high-die → must use die5.
+    // Result: exactly 1 sequence using die5.
+    test('1 white at pt3, 14 borne off, dice [3,5] → forced-high-die, 1 sequence using die5', () {
+      final pts = boardWith({3: (1, BackgammonColor.white)});
+      final state =
+          stateWith(points: pts, whiteBorneOff: 14, remainingDice: [3, 5]);
+      final moves = engine.getValidMoves(state);
+      expect(moves.length, 1);
+      expect(moves.first.checkerMoves.first.from, 3);
+      expect(moves.first.checkerMoves.first.to, 25);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Multiple checkers on bar (adapted from timiles/backgammon BoardSpec)
+  // ---------------------------------------------------------------------------
+
+  group('Multiple checkers on bar', () {
+    test('white 2 on bar, both entries open — both must enter before moving', () {
+      final pts = boardWith({10: (2, BackgammonColor.white)});
+      final state = stateWith(
+        points: pts,
+        whiteBar: 2,
+        remainingDice: [3, 5],
+      );
+      final moves = engine.getValidMoves(state);
+      // Every sequence must begin with a bar-entry move
+      for (final m in moves) {
+        expect(m.checkerMoves.first.from, 0,
+            reason: 'must enter from bar first');
+      }
+      // With bar=2 and 2 dice, both entries happen → all sequences use 2 moves
+      expect(moves.every((m) => m.checkerMoves.length == 2), true);
+      // Entry points: 25-3=22, 25-5=20
+      final entryPoints =
+          moves.expand((m) => m.checkerMoves).map((c) => c.to).toSet();
+      expect(entryPoints, containsAll([22, 20]));
+    });
+
+    test('white 2 on bar, one entry blocked — enters only 1', () {
+      // Die3 entry pt22 blocked; die5 entry pt20 open
+      final pts = boardWith({22: (2, BackgammonColor.black)});
+      final state = stateWith(
+        points: pts,
+        whiteBar: 2,
+        remainingDice: [3, 5],
+      );
+      final moves = engine.getValidMoves(state);
+      // First move must be bar entry using die5 (pt20)
+      expect(moves.isNotEmpty, true);
+      for (final m in moves) {
+        expect(m.checkerMoves.first.from, 0);
+        expect(m.checkerMoves.first.to, 20); // only die5 entry available
+      }
+    });
+
+    test('white 2 on bar, both entries blocked → forced pass', () {
+      final pts = boardWith({
+        22: (2, BackgammonColor.black), // blocks die3 entry
+        20: (2, BackgammonColor.black), // blocks die5 entry
+      });
+      final state = stateWith(
+        points: pts,
+        whiteBar: 2,
+        remainingDice: [3, 5],
+      );
+      expect(engine.getValidMoves(state).isEmpty, true);
+    });
+
+    test('black 2 on bar, both entries open — enters both', () {
+      final pts = boardWith({10: (2, BackgammonColor.black)});
+      final state = stateWith(
+        points: pts,
+        blackBar: 2,
+        activeColor: BackgammonColor.black,
+        remainingDice: [3, 4],
+      );
+      final moves = engine.getValidMoves(state);
+      // Die3: entry pt3; die4: entry pt4
+      expect(moves.isNotEmpty, true);
+      for (final m in moves) {
+        expect(m.checkerMoves.first.from, 0);
+      }
+      expect(moves.every((m) => m.checkerMoves.length == 2), true);
+    });
+
+    test('hitting a blot on bar entry when 2 checkers on bar', () {
+      // White has 2 on bar; pt22 has a black blot; die3 → pt22 (hit)
+      final pts = boardWith({22: (1, BackgammonColor.black)});
+      final state = stateWith(
+        points: pts,
+        whiteBar: 2,
+        remainingDice: [3, 5],
+      );
+      final moves = engine.getValidMoves(state);
+      // One of the sequences should hit pt22 with die3 entry
+      expect(
+        moves.any((m) => m.checkerMoves.any((c) => c.from == 0 && c.to == 22)),
+        true,
+      );
+      // After applying a move that hits pt22, black bar increments
+      final hitMove = moves.firstWhere(
+          (m) => m.checkerMoves.any((c) => c.from == 0 && c.to == 22));
+      final next = engine.applyMove(state, hitMove);
+      expect(next.blackBar, 1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Gammon and backgammon win-type detection
+  // (adapted from bungogood/bkgm game_state tests)
+  // ---------------------------------------------------------------------------
+
+  group('Gammon and backgammon detection', () {
+    test('null winType during ongoing game', () {
+      expect(BackgammonState.initial().winType, isNull);
+    });
+
+    test('normal win: loser has borne off at least 1', () {
+      // White wins; black has 3 borne off (normal win)
+      final pts = boardWith({1: (1, BackgammonColor.white)});
+      final state = stateWith(
+        points: pts,
+        whiteBorneOff: 14,
+        blackBorneOff: 3,
+        remainingDice: [1],
+      );
+      final next = engine.applyMove(
+          state,
+          BackgammonMove(
+              dice: [1], checkerMoves: [CheckerMove(from: 1, to: 25)]));
+      expect(next.winner, BackgammonColor.white);
+      expect(next.winType, BackgammonWinType.normal);
+    });
+
+    test('gammon: loser has borne off zero checkers', () {
+      // White wins; black still has all 15 on board (0 borne off)
+      final pts = boardWith({
+        1: (1, BackgammonColor.white),
+        19: (15, BackgammonColor.black),
+      });
+      final state = stateWith(
+        points: pts,
+        whiteBorneOff: 14,
+        blackBorneOff: 0,
+        remainingDice: [1],
+      );
+      final next = engine.applyMove(
+          state,
+          BackgammonMove(
+              dice: [1], checkerMoves: [CheckerMove(from: 1, to: 25)]));
+      expect(next.winType, BackgammonWinType.gammon);
+    });
+
+    test('backgammon: loser has checker on bar when winner finishes', () {
+      // White wins; black has 1 checker on bar (backgammon)
+      final pts = boardWith({1: (1, BackgammonColor.white)});
+      final state = stateWith(
+        points: pts,
+        whiteBorneOff: 14,
+        blackBorneOff: 0,
+        blackBar: 1,
+        remainingDice: [1],
+      );
+      final next = engine.applyMove(
+          state,
+          BackgammonMove(
+              dice: [1], checkerMoves: [CheckerMove(from: 1, to: 25)]));
+      expect(next.winType, BackgammonWinType.backgammon);
+    });
+
+    test('backgammon: loser has checker in winner\'s home board', () {
+      // White wins; black still has checker on pt4 (white's home = pts 1-6)
+      final pts = boardWith({
+        1: (1, BackgammonColor.white),
+        4: (1, BackgammonColor.black), // inside white's home board
+      });
+      final state = stateWith(
+        points: pts,
+        whiteBorneOff: 14,
+        blackBorneOff: 0,
+        remainingDice: [1],
+      );
+      final next = engine.applyMove(
+          state,
+          BackgammonMove(
+              dice: [1], checkerMoves: [CheckerMove(from: 1, to: 25)]));
+      expect(next.winType, BackgammonWinType.backgammon);
+    });
+
+    test('black wins with gammon', () {
+      // Black wins; white has 0 borne off
+      final pts = boardWith({
+        24: (1, BackgammonColor.black),
+        6: (15, BackgammonColor.white),
+      });
+      final state = stateWith(
+        points: pts,
+        blackBorneOff: 14,
+        whiteBorneOff: 0,
+        activeColor: BackgammonColor.black,
+        remainingDice: [1],
+      );
+      final next = engine.applyMove(
+          state,
+          BackgammonMove(
+              dice: [1], checkerMoves: [CheckerMove(from: 24, to: 25)]));
+      expect(next.winner, BackgammonColor.black);
+      expect(next.winType, BackgammonWinType.gammon);
+    });
+
+    test('black backgammon: white checker in black home board (pts 19-24)', () {
+      // Black wins; white still has a checker on pt21 (black's home = 19-24)
+      final pts = boardWith({
+        24: (1, BackgammonColor.black),
+        21: (1, BackgammonColor.white), // inside black's home board
+      });
+      final state = stateWith(
+        points: pts,
+        blackBorneOff: 14,
+        whiteBorneOff: 0,
+        activeColor: BackgammonColor.black,
+        remainingDice: [1],
+      );
+      final next = engine.applyMove(
+          state,
+          BackgammonMove(
+              dice: [1], checkerMoves: [CheckerMove(from: 24, to: 25)]));
+      expect(next.winType, BackgammonWinType.backgammon);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Complex bear-off sequences (adapted from bkgm move_single_checker_bearoff_*)
+  // ---------------------------------------------------------------------------
+
+  group('Complex bear-off sequences', () {
+    test('doubles [2,2,2,2]: 4 checkers on pt2 → all 4 borne off', () {
+      final pts = boardWith({2: (4, BackgammonColor.white)});
+      final state =
+          stateWith(points: pts, whiteBorneOff: 11, remainingDice: [2, 2, 2, 2]);
+      final moves = engine.getValidMoves(state);
+      // With exact die=2 from pt2, all 4 should bear off in one sequence
+      expect(moves.any((m) {
+        return m.checkerMoves.length == 4 &&
+            m.checkerMoves.every((c) => c.from == 2 && c.to == 25);
+      }), true);
+    });
+
+    test('[6,5]: checker on pt6 (exact die6) and pt5 (exact die5)', () {
+      final pts = boardWith({
+        6: (1, BackgammonColor.white),
+        5: (1, BackgammonColor.white),
+      });
+      final state =
+          stateWith(points: pts, whiteBorneOff: 13, remainingDice: [6, 5]);
+      final moves = engine.getValidMoves(state);
+      // Both checkers can bear off: 6→off with die6, 5→off with die5
+      expect(hasMove(moves, [CheckerMove(from: 6, to: 25), CheckerMove(from: 5, to: 25)]),
+          true);
+      expect(hasMove(moves, [CheckerMove(from: 5, to: 25), CheckerMove(from: 6, to: 25)]),
+          true);
+    });
+
+    test('overshoot with [6,6,6,6]: 4 checkers on pt1 → all 4 borne off', () {
+      final pts = boardWith({1: (4, BackgammonColor.white)});
+      final state =
+          stateWith(points: pts, whiteBorneOff: 11, remainingDice: [6, 6, 6, 6]);
+      final moves = engine.getValidMoves(state);
+      // Die6 overshoots pt1 (dist=1), valid since no checker on pts 2-6
+      expect(moves.any((m) {
+        return m.checkerMoves.length == 4 &&
+            m.checkerMoves.every((c) => c.from == 1 && c.to == 25);
+      }), true);
+    });
+
+    test('black doubles [3,3,3,3]: 4 checkers on pt22 → all 4 borne off', () {
+      // Black home: 19-24. pt22: dist = 25-22 = 3 (exact)
+      final pts = boardWith({22: (4, BackgammonColor.black)});
+      final state = stateWith(
+        points: pts,
+        blackBorneOff: 11,
+        activeColor: BackgammonColor.black,
+        remainingDice: [3, 3, 3, 3],
+      );
+      final moves = engine.getValidMoves(state);
+      expect(moves.any((m) {
+        return m.checkerMoves.length == 4 &&
+            m.checkerMoves.every((c) => c.from == 22 && c.to == 25);
+      }), true);
+    });
+
+    test('black forced-high-die: pt6 open to pt8 and pt11, but pt13 blocked — must use die5', () {
+      // Die2: 6→8 (open). Then die5: 8→13 (2W = blocked). Dead → 1-move seq [6→8].
+      // Die5: 6→11 (open). Then die2: 11→13 (2W = blocked). Dead → 1-move seq [6→11].
+      // Max=1. Forced-high-die: higher die is 5 → must use [6→11].
+      final pts = boardWith({
+        6: (1, BackgammonColor.black),
+        13: (2, BackgammonColor.white), // blocks both follow-up moves
+      });
+      final state = stateWith(
+        points: pts,
+        activeColor: BackgammonColor.black,
+        remainingDice: [2, 5],
+      );
+      final moves = engine.getValidMoves(state);
+      expect(moves.length, 1);
+      expect(moves.first.checkerMoves.first.from, 6);
+      expect(moves.first.checkerMoves.first.to, 11); // die5 (higher)
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Position symmetry (adapted from bkgm flip test)
+  // Mirroring a position (swap colors, reverse point numbers) must yield the
+  // same number of legal moves.
+  // ---------------------------------------------------------------------------
+
+  group('Position symmetry', () {
+    test('mirrored mid-game position has same move count', () {
+      // Original: white at pt13(3), pt8(2); black at pt12(3), pt17(2)
+      final ptsOrig = boardWith({
+        13: (3, BackgammonColor.white),
+        8: (2, BackgammonColor.white),
+        12: (3, BackgammonColor.black),
+        17: (2, BackgammonColor.black),
+      });
+      final stateOrig = stateWith(
+          points: ptsOrig,
+          activeColor: BackgammonColor.white,
+          remainingDice: [3, 5]);
+      final movesOrig = engine.getValidMoves(stateOrig);
+
+      // Mirror: swap colors and reverse point numbers (pt N → pt 25-N)
+      // White pt13→pt12, pt8→pt17; black pt12→pt13, pt17→pt8
+      // Then assign: mirror-white (was black) moves as the active player
+      final ptsMirror = boardWith({
+        12: (3, BackgammonColor.black), // was white pt13 → mirror pt12, now opponent
+        17: (2, BackgammonColor.black), // was white pt8  → mirror pt17, now opponent
+        13: (3, BackgammonColor.white), // was black pt12 → mirror pt13, now active
+        8: (2, BackgammonColor.white),  // was black pt17 → mirror pt8,  now active
+      });
+      final stateMirror = stateWith(
+          points: ptsMirror,
+          activeColor: BackgammonColor.white,
+          remainingDice: [3, 5]);
+      final movesMirror = engine.getValidMoves(stateMirror);
+
+      expect(movesMirror.length, movesOrig.length);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // End-to-end game simulation
+  // ---------------------------------------------------------------------------
+
+  group('End-to-end game', () {
+    test('2-turn play: state transitions, points, and turn switch are correct', () {
+      // Turn 1 — White plays [3,1]: moves 13→10 and 8→7
+      var state = BackgammonState.initial().copyWith(
+        phase: GamePhase.moving,
+        remainingDice: [3, 1],
+      );
+      state = engine.applyMove(
+        state,
+        BackgammonMove(
+          dice: [3, 1],
+          checkerMoves: [
+            CheckerMove(from: 13, to: 10),
+            CheckerMove(from: 8, to: 7),
+          ],
+        ),
+      );
+      expect(state.activeColor, BackgammonColor.black);
+      expect(state.phase, GamePhase.rolling);
+      expect(state.points[10].color, BackgammonColor.white);
+      expect(state.points[10].count, 1);
+      expect(state.points[7].color, BackgammonColor.white);
+      expect(state.points[7].count, 1);
+      expect(state.isGameOver, false);
+
+      // Turn 2 — Black plays [3,1]: moves 12→15 and 17→18
+      // (black moves to higher numbers: 12+3=15, 17+1=18)
+      state = state.copyWith(
+        phase: GamePhase.moving,
+        remainingDice: [3, 1],
+      );
+      state = engine.applyMove(
+        state,
+        BackgammonMove(
+          dice: [3, 1],
+          checkerMoves: [
+            CheckerMove(from: 12, to: 15),
+            CheckerMove(from: 17, to: 18),
+          ],
+        ),
+      );
+      expect(state.activeColor, BackgammonColor.white);
+      expect(state.phase, GamePhase.rolling);
+      expect(state.points[15].color, BackgammonColor.black);
+      expect(state.points[15].count, 1);
+      expect(state.points[18].color, BackgammonColor.black);
+      expect(state.points[18].count, 1);
+      expect(state.isGameOver, false);
+    });
+
+    test('near-win: white bears off last checker, gammon declared', () {
+      // White has 14 borne off, 1 checker at pt1.
+      // Black has all 15 on pt19 (0 borne off) → gammon when white wins.
+      final pts = boardWith({
+        1: (1, BackgammonColor.white),
+        19: (15, BackgammonColor.black),
+      });
+      var state = stateWith(
+        points: pts,
+        whiteBorneOff: 14,
+        blackBorneOff: 0,
+        remainingDice: [1],
+      );
+      state = engine.applyMove(
+        state,
+        BackgammonMove(
+            dice: [1], checkerMoves: [CheckerMove(from: 1, to: 25)]),
+      );
+      expect(state.isGameOver, true);
+      expect(state.winner, BackgammonColor.white);
+      expect(state.winType, BackgammonWinType.gammon);
+    });
+
+    test('full bear-off sequence: white clears all 6 home-board checkers', () {
+      // White: 3 on pt2, 3 on pt4. 9 already borne off. Dice [4,2] each turn.
+      final pts = boardWith({
+        2: (3, BackgammonColor.white),
+        4: (3, BackgammonColor.white),
+      });
+      var state =
+          stateWith(points: pts, whiteBorneOff: 9, remainingDice: [4, 2]);
+
+      // Turn 1: bear off pt4 (die4 exact) and pt2 (die2 exact)
+      state = engine.applyMove(
+        state,
+        BackgammonMove(
+          dice: [4, 2],
+          checkerMoves: [
+            CheckerMove(from: 4, to: 25),
+            CheckerMove(from: 2, to: 25),
+          ],
+        ),
+      );
+      expect(state.whiteBorneOff, 11);
+      expect(state.activeColor, BackgammonColor.black);
+
+      // Turn 3: white again with [4,2]
+      state = state.copyWith(
+        activeColor: BackgammonColor.white,
+        phase: GamePhase.moving,
+        remainingDice: [4, 2],
+      );
+      state = engine.applyMove(
+        state,
+        BackgammonMove(
+          dice: [4, 2],
+          checkerMoves: [
+            CheckerMove(from: 4, to: 25),
+            CheckerMove(from: 2, to: 25),
+          ],
+        ),
+      );
+      expect(state.whiteBorneOff, 13);
+
+      // Final turn: [4,2] again
+      state = state.copyWith(
+        activeColor: BackgammonColor.white,
+        phase: GamePhase.moving,
+        remainingDice: [4, 2],
+      );
+      state = engine.applyMove(
+        state,
+        BackgammonMove(
+          dice: [4, 2],
+          checkerMoves: [
+            CheckerMove(from: 4, to: 25),
+            CheckerMove(from: 2, to: 25),
+          ],
+        ),
+      );
+      expect(state.whiteBorneOff, 15);
+      expect(state.isGameOver, true);
+      expect(state.winner, BackgammonColor.white);
+    });
+  });
 }
