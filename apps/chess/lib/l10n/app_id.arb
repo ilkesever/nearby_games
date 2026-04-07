@@ -1,6 +1,5 @@
 {
   "@@locale": "id",
-
   "appTitle": "Catur Terdekat",
   "homeTagline": "Bermain catur dengan seseorang di dekatmu\nTanpa internet",
   "homeYourName": "Namamu",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Remis Ditawarkan",
   "drawOfferedContent": "Lawan menawarkan remis. Terima?",
   "drawDecline": "Tolak",
-  "drawAccept": "Terima",
-  "undoRequestedTitle": "Pembatalan Diminta",
-  "undoRequestedContent": "Lawan ingin membatalkan langkah terakhirnya. Izinkan?",
-  "undoAllow": "Izinkan"
+  "drawAccept": "Terima"
 }

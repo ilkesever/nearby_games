@@ -74,14 +74,4 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get drawAccept => 'Terima';
-
-  @override
-  String get undoRequestedTitle => 'Pembatalan Diminta';
-
-  @override
-  String get undoRequestedContent =>
-      'Lawan ingin membatalkan langkah terakhirnya. Izinkan?';
-
-  @override
-  String get undoAllow => 'Izinkan';
 }

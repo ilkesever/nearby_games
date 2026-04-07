@@ -1,0 +1,1 @@
+backgammon,bluetooth,juego de mesa,dados,sin internet,cercano,amigos,estrategia,multijugador,clásico

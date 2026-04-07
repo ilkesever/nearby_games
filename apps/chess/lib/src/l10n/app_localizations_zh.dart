@@ -73,13 +73,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get drawAccept => '接受';
-
-  @override
-  String get undoRequestedTitle => '悔棋请求';
-
-  @override
-  String get undoRequestedContent => '对手想撤销上一步。允许？';
-
-  @override
-  String get undoAllow => '允许';
 }

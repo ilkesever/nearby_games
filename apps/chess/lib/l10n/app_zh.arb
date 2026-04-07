@@ -1,6 +1,5 @@
 {
   "@@locale": "zh",
-
   "appTitle": "附近象棋",
   "homeTagline": "与附近的人下棋\n无需网络",
   "homeYourName": "您的姓名",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "提和",
   "drawOfferedContent": "对手提出平局。接受？",
   "drawDecline": "拒绝",
-  "drawAccept": "接受",
-  "undoRequestedTitle": "悔棋请求",
-  "undoRequestedContent": "对手想撤销上一步。允许？",
-  "undoAllow": "允许"
+  "drawAccept": "接受"
 }

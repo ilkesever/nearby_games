@@ -23,7 +23,10 @@
   "drawOfferedContent": "Seu oponente está oferecendo empate. Aceitar?",
   "drawDecline": "Recusar",
   "drawAccept": "Aceitar",
-  "undoRequestedTitle": "Desfazer solicitado",
-  "undoRequestedContent": "Seu oponente quer desfazer o último movimento. Permitir?",
-  "undoAllow": "Permitir"
+  "openingRollTitle": "Lançamento inicial",
+  "openingRollInstruction": "Cada jogador lança — o maior vai primeiro",
+  "openingRollTie": "Empate! Lance novamente",
+  "openingRollGoesFirst": "{color} vai primeiro!",
+  "scoreWhite": "Brancas",
+  "scoreBlack": "Pretas"
 }

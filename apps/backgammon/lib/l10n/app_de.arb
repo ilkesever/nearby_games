@@ -23,7 +23,10 @@
   "drawOfferedContent": "Dein Gegner bietet Remis an. Annehmen?",
   "drawDecline": "Ablehnen",
   "drawAccept": "Annehmen",
-  "undoRequestedTitle": "Rücknahme angefordert",
-  "undoRequestedContent": "Dein Gegner möchte den letzten Zug zurücknehmen. Erlauben?",
-  "undoAllow": "Erlauben"
+  "openingRollTitle": "Anfangswurf",
+  "openingRollInstruction": "Jeder Spieler würfelt — der Höchste beginnt",
+  "openingRollTie": "Unentschieden! Nochmal würfeln",
+  "openingRollGoesFirst": "{color} beginnt!",
+  "scoreWhite": "Weiß",
+  "scoreBlack": "Schwarz"
 }

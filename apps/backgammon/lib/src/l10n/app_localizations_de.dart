@@ -79,12 +79,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get drawAccept => 'Annehmen';
 
   @override
-  String get undoRequestedTitle => 'Rücknahme angefordert';
+  String get openingRollTitle => 'Anfangswurf';
 
   @override
-  String get undoRequestedContent =>
-      'Dein Gegner möchte den letzten Zug zurücknehmen. Erlauben?';
+  String get openingRollInstruction =>
+      'Jeder Spieler würfelt — der Höchste beginnt';
 
   @override
-  String get undoAllow => 'Erlauben';
+  String get openingRollTie => 'Unentschieden! Nochmal würfeln';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color beginnt!';
+  }
+
+  @override
+  String get scoreWhite => 'Weiß';
+
+  @override
+  String get scoreBlack => 'Schwarz';
 }

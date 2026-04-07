@@ -74,14 +74,4 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get drawAccept => 'Принять';
-
-  @override
-  String get undoRequestedTitle => 'Запрос отмены';
-
-  @override
-  String get undoRequestedContent =>
-      'Соперник хочет отменить последний ход. Разрешить?';
-
-  @override
-  String get undoAllow => 'Разрешить';
 }

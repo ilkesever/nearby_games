@@ -27,7 +27,11 @@ class PointState {
       );
 }
 
-enum GamePhase { rolling, moving, gameOver }
+/// [openingRoll] — both players roll one die to determine who goes first.
+/// [rolling]    — active player rolls their two game dice.
+/// [moving]     — active player moves their checkers.
+/// [gameOver]   — game has ended.
+enum GamePhase { openingRoll, rolling, moving, gameOver }
 
 /// Win classification. Only meaningful when [BackgammonState.winner] is non-null.
 ///
@@ -48,6 +52,16 @@ class BackgammonState extends GameState {
   final List<int> remainingDice;
   final int _moveCount;
 
+  /// Opening die for white, set after white submits their opening roll move.
+  /// Cleared when the opening roll resolves (winner found or tie re-roll).
+  final int? whiteOpeningDie;
+
+  /// Opening die for black, set after black submits their opening roll move.
+  final int? blackOpeningDie;
+
+  // Sentinel used by copyWith to distinguish "not provided" from explicit null.
+  static const Object _keep = Object();
+
   BackgammonState({
     required this.points,
     required this.whiteBar,
@@ -58,12 +72,18 @@ class BackgammonState extends GameState {
     required this.phase,
     required this.remainingDice,
     required int moveCount,
+    this.whiteOpeningDie,
+    this.blackOpeningDie,
   }) : _moveCount = moveCount;
 
-  factory BackgammonState.initial() {
-    // Standard backgammon starting position:
-    // White: 2 on pt 24, 5 on pt 13, 3 on pt 8, 5 on pt 6
-    // Black: 2 on pt 1, 5 on pt 12, 3 on pt 17, 5 on pt 19
+  /// Creates the standard starting position.
+  ///
+  /// - [startingColor] omitted (new match / BLE): starts in [GamePhase.openingRoll]
+  ///   with white rolling first. Both devices produce the **same** deterministic
+  ///   state — no random numbers here.
+  /// - [startingColor] provided (winner starts next game): skips the opening roll
+  ///   and starts directly in [GamePhase.rolling].
+  factory BackgammonState.initial({BackgammonColor? startingColor}) {
     final pts = List<PointState>.filled(25, const PointState.empty());
     pts[24] = const PointState(count: 2, color: BackgammonColor.white);
     pts[13] = const PointState(count: 5, color: BackgammonColor.white);
@@ -79,8 +99,9 @@ class BackgammonState extends GameState {
       blackBar: 0,
       whiteBorneOff: 0,
       blackBorneOff: 0,
-      activeColor: BackgammonColor.white,
-      phase: GamePhase.rolling,
+      // White always rolls first in the opening; or use the provided winner.
+      activeColor: startingColor ?? BackgammonColor.white,
+      phase: startingColor != null ? GamePhase.rolling : GamePhase.openingRoll,
       remainingDice: const [],
       moveCount: 0,
     );
@@ -99,8 +120,6 @@ class BackgammonState extends GameState {
     final loserBorneOff =
         w == BackgammonColor.white ? blackBorneOff : whiteBorneOff;
     final loserBar = w == BackgammonColor.white ? blackBar : whiteBar;
-    // Winner's home board: where winner bears off from.
-    // White home = pts 1-6 (white moves 24→1); Black home = pts 19-24.
     final homeStart = w == BackgammonColor.white ? 1 : 19;
     final homeEnd = w == BackgammonColor.white ? 6 : 24;
     final loserInWinnerHome = points
@@ -139,6 +158,8 @@ class BackgammonState extends GameState {
         'phase': phase.index,
         'remainingDice': remainingDice,
         'moveCount': _moveCount,
+        'whiteOpeningDie': whiteOpeningDie,
+        'blackOpeningDie': blackOpeningDie,
       };
 
   factory BackgammonState.fromMap(Map<String, dynamic> map) => BackgammonState(
@@ -154,8 +175,13 @@ class BackgammonState extends GameState {
         phase: GamePhase.values[map['phase'] as int],
         remainingDice: List<int>.from(map['remainingDice'] as List),
         moveCount: map['moveCount'] as int,
+        whiteOpeningDie: map['whiteOpeningDie'] as int?,
+        blackOpeningDie: map['blackOpeningDie'] as int?,
       );
 
+  /// [whiteOpeningDie] and [blackOpeningDie] use a sentinel default so that
+  /// passing `null` explicitly sets the field to null, while omitting the
+  /// parameter keeps the existing value.
   BackgammonState copyWith({
     List<PointState>? points,
     int? whiteBar,
@@ -166,6 +192,8 @@ class BackgammonState extends GameState {
     GamePhase? phase,
     List<int>? remainingDice,
     int? moveCount,
+    Object? whiteOpeningDie = _keep,
+    Object? blackOpeningDie = _keep,
   }) =>
       BackgammonState(
         points: points ?? this.points,
@@ -177,5 +205,11 @@ class BackgammonState extends GameState {
         phase: phase ?? this.phase,
         remainingDice: remainingDice ?? this.remainingDice,
         moveCount: moveCount ?? _moveCount,
+        whiteOpeningDie: identical(whiteOpeningDie, _keep)
+            ? this.whiteOpeningDie
+            : whiteOpeningDie as int?,
+        blackOpeningDie: identical(blackOpeningDie, _keep)
+            ? this.blackOpeningDie
+            : blackOpeningDie as int?,
       );
 }

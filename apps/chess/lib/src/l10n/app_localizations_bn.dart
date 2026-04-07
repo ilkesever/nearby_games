@@ -74,14 +74,4 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get drawAccept => 'গ্রহণ করুন';
-
-  @override
-  String get undoRequestedTitle => 'আন্ডু অনুরোধ';
-
-  @override
-  String get undoRequestedContent =>
-      'প্রতিপক্ষ তার শেষ চালটি ফিরিয়ে নিতে চায়। অনুমতি দেবেন?';
-
-  @override
-  String get undoAllow => 'অনুমতি দিন';
 }

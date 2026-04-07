@@ -23,7 +23,10 @@
   "drawOfferedContent": "প্রতিপক্ষ ড্র প্রস্তাব করছে। গ্রহণ করবেন?",
   "drawDecline": "প্রত্যাখ্যান",
   "drawAccept": "গ্রহণ",
-  "undoRequestedTitle": "আনডু অনুরোধ",
-  "undoRequestedContent": "প্রতিপক্ষ শেষ চাল ফেরাতে চায়। অনুমতি দেবেন?",
-  "undoAllow": "অনুমতি দিন"
+  "openingRollTitle": "Opening Roll",
+  "openingRollInstruction": "Each player taps to roll — highest goes first",
+  "openingRollTie": "Tie! Roll again",
+  "openingRollGoesFirst": "{color} goes first!",
+  "scoreWhite": "সাদা",
+  "scoreBlack": "কালো"
 }

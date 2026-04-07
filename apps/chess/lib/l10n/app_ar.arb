@@ -1,6 +1,5 @@
 {
   "@@locale": "ar",
-
   "appTitle": "شطرنج قريب",
   "homeTagline": "العب الشطرنج مع شخص قريب\nلا يلزم إنترنت",
   "homeYourName": "اسمك",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "عرض تعادل",
   "drawOfferedContent": "منافسك يعرض التعادل. قبول؟",
   "drawDecline": "رفض",
-  "drawAccept": "قبول",
-  "undoRequestedTitle": "طلب تراجع",
-  "undoRequestedContent": "منافسك يريد التراجع عن آخر حركة. سماح؟",
-  "undoAllow": "سماح"
+  "drawAccept": "قبول"
 }

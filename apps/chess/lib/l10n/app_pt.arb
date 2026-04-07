@@ -1,6 +1,5 @@
 {
   "@@locale": "pt",
-
   "appTitle": "Xadrez próximo",
   "homeTagline": "Jogue xadrez com alguém próximo\nSem internet",
   "homeYourName": "Seu nome",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Empate oferecido",
   "drawOfferedContent": "Seu oponente está oferecendo empate. Aceitar?",
   "drawDecline": "Recusar",
-  "drawAccept": "Aceitar",
-  "undoRequestedTitle": "Desfazer solicitado",
-  "undoRequestedContent": "Seu oponente quer desfazer o último movimento. Permitir?",
-  "undoAllow": "Permitir"
+  "drawAccept": "Aceitar"
 }

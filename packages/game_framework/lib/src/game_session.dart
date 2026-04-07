@@ -49,6 +49,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
   final _statusController = StreamController<GameSessionStatus>.broadcast();
   final _moveController = StreamController<TMove>.broadcast();
   final _errorController = StreamController<String>.broadcast();
+  final _customController = StreamController<Map<String, dynamic>>.broadcast();
 
   /// Create a new game session.
   GameSession({
@@ -95,6 +96,9 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
 
   /// Stream of error messages.
   Stream<String> get errorStream => _errorController.stream;
+
+  /// Stream of custom (game-specific) messages from the remote player.
+  Stream<Map<String, dynamic>> get customStream => _customController.stream;
 
   // ==========================================================================
   // SESSION LIFECYCLE
@@ -223,21 +227,23 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
     bleService.sendTyped(BleMessageType.drawDecline);
   }
 
-  /// Request to undo the last move.
-  void requestUndo() {
-    if (!isPlaying || _moveHistory.isEmpty) return;
-    bleService.sendTyped(BleMessageType.undoRequest);
+  /// Start a rematch. Resets the game with the given initial state
+  /// and notifies the remote player.
+  void rematch({TState? initialState}) {
+    if (_status != GameSessionStatus.gameOver) return;
+    _state = initialState ?? engine.initialState;
+    _moveHistory.clear();
+    _updateStatus(GameSessionStatus.playing);
+    _stateController.add(_state);
+    bleService.sendTyped(BleMessageType.rematch, {
+      'state': engine.serializeState(_state),
+    });
+    notifyListeners();
   }
 
-  /// Accept an undo request.
-  void acceptUndo() {
-    // TODO: Implement undo logic (revert state)
-    bleService.sendTyped(BleMessageType.undoAccept);
-  }
-
-  /// Decline an undo request.
-  void declineUndo() {
-    bleService.sendTyped(BleMessageType.undoDecline);
+  /// Send a custom (game-specific) message to the remote player.
+  void sendCustom(Map<String, dynamic> payload) {
+    bleService.sendTyped(BleMessageType.custom, payload);
   }
 
   // ==========================================================================
@@ -253,6 +259,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
     _statusController.close();
     _moveController.close();
     _errorController.close();
+    _customController.close();
     super.dispose();
   }
 
@@ -269,6 +276,7 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
   }
 
   void _updateStatus(GameSessionStatus newStatus) {
+    if (newStatus == _status) return;
     _status = newStatus;
     _statusController.add(newStatus);
     notifyListeners();
@@ -283,8 +291,14 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
         _handleStateSync(message.payload);
 
       case BleMessageType.gameStart:
-        // Remote player confirmed game start
+        // Adopt the host's initial state (includes opening dice / starting color)
         if (_status != GameSessionStatus.playing) {
+          final stateData =
+              message.payload['state'] as Map<String, dynamic>?;
+          if (stateData != null) {
+            _state = engine.deserializeState(stateData);
+            _stateController.add(_state);
+          }
           _updateStatus(GameSessionStatus.playing);
         }
 
@@ -304,16 +318,6 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
       case BleMessageType.drawDecline:
         _errorController.add('DRAW_DECLINED');
 
-      case BleMessageType.undoRequest:
-        _errorController.add('UNDO_REQUESTED');
-
-      case BleMessageType.undoAccept:
-        // TODO: Implement undo
-        break;
-
-      case BleMessageType.undoDecline:
-        _errorController.add('UNDO_DECLINED');
-
       case BleMessageType.ping:
         bleService.sendTyped(BleMessageType.pong);
 
@@ -326,8 +330,21 @@ class GameSession<TState extends GameState, TMove> extends ChangeNotifier {
         break;
 
       case BleMessageType.custom:
-        // Game-specific custom messages
-        break;
+        _customController.add(message.payload);
+
+      case BleMessageType.rematch:
+        if (_status == GameSessionStatus.playing) break;
+        final rematchState =
+            message.payload['state'] as Map<String, dynamic>?;
+        if (rematchState != null) {
+          _state = engine.deserializeState(rematchState);
+        } else {
+          _state = engine.initialState;
+        }
+        _moveHistory.clear();
+        _updateStatus(GameSessionStatus.playing);
+        _stateController.add(_state);
+        notifyListeners();
     }
   }
 

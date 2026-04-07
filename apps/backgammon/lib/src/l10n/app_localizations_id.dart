@@ -79,12 +79,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get drawAccept => 'Terima';
 
   @override
-  String get undoRequestedTitle => 'Permintaan Batalkan';
+  String get openingRollTitle => 'Lemparan Awal';
 
   @override
-  String get undoRequestedContent =>
-      'Lawan ingin membatalkan gerakan terakhir. Izinkan?';
+  String get openingRollInstruction =>
+      'Setiap pemain melempar — angka tertinggi mulai duluan';
 
   @override
-  String get undoAllow => 'Izinkan';
+  String get openingRollTie => 'Seri! Lempar lagi';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color mulai duluan!';
+  }
+
+  @override
+  String get scoreWhite => 'Putih';
+
+  @override
+  String get scoreBlack => 'Hitam';
 }

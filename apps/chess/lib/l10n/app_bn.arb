@@ -1,6 +1,5 @@
 {
   "@@locale": "bn",
-
   "appTitle": "কাছের দাবা",
   "homeTagline": "কাছের কারো সাথে দাবা খেলুন\nইন্টারনেট ছাড়াই",
   "homeYourName": "আপনার নাম",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "ড্র অফার",
   "drawOfferedContent": "আপনার প্রতিপক্ষ ড্র প্রস্তাব করছে। গ্রহণ করবেন?",
   "drawDecline": "প্রত্যাখ্যান করুন",
-  "drawAccept": "গ্রহণ করুন",
-  "undoRequestedTitle": "আন্ডু অনুরোধ",
-  "undoRequestedContent": "প্রতিপক্ষ তার শেষ চালটি ফিরিয়ে নিতে চায়। অনুমতি দেবেন?",
-  "undoAllow": "অনুমতি দিন"
+  "drawAccept": "গ্রহণ করুন"
 }

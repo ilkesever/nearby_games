@@ -23,7 +23,10 @@
   "drawOfferedContent": "Tu oponente ofrece tablas. ¿Aceptar?",
   "drawDecline": "Rechazar",
   "drawAccept": "Aceptar",
-  "undoRequestedTitle": "Deshacer solicitado",
-  "undoRequestedContent": "Tu oponente quiere deshacer su último movimiento. ¿Permitir?",
-  "undoAllow": "Permitir"
+  "openingRollTitle": "Tirada inicial",
+  "openingRollInstruction": "Cada jugador lanza — el mayor va primero",
+  "openingRollTie": "¡Empate! Vuelve a lanzar",
+  "openingRollGoesFirst": "¡{color} va primero!",
+  "scoreWhite": "Blancas",
+  "scoreBlack": "Negras"
 }

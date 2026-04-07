@@ -23,7 +23,10 @@
   "drawOfferedContent": "خصمك يعرض التعادل. قبول؟",
   "drawDecline": "رفض",
   "drawAccept": "قبول",
-  "undoRequestedTitle": "طلب تراجع",
-  "undoRequestedContent": "يريد خصمك التراجع عن آخر حركة. السماح؟",
-  "undoAllow": "سماح"
+  "openingRollTitle": "رمي البداية",
+  "openingRollInstruction": "يرمي كل لاعب — الأعلى يبدأ أولاً",
+  "openingRollTie": "تعادل! ارمِ مجدداً",
+  "openingRollGoesFirst": "{color} يبدأ أولاً!",
+  "scoreWhite": "الأبيض",
+  "scoreBlack": "الأسود"
 }

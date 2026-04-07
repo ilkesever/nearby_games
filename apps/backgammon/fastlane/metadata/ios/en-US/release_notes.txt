@@ -1,0 +1,4 @@
+• Initial release
+• Bluetooth multiplayer — no internet required
+• Pass & Play local mode
+• 12 languages: Arabic, Bengali, Chinese, English, French, German, Hindi, Indonesian, Portuguese, Russian, Spanish, Turkish

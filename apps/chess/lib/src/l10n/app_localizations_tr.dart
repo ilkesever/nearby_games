@@ -75,14 +75,4 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get drawAccept => 'Kabul Et';
-
-  @override
-  String get undoRequestedTitle => 'Geri Al İsteği';
-
-  @override
-  String get undoRequestedContent =>
-      'Rakibiniz son hamlesini geri almak istiyor. İzin ver?';
-
-  @override
-  String get undoAllow => 'İzin Ver';
 }

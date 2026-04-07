@@ -74,14 +74,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get drawAccept => 'Accept';
-
-  @override
-  String get undoRequestedTitle => 'Undo Requested';
-
-  @override
-  String get undoRequestedContent =>
-      'Your opponent wants to undo their last move. Allow?';
-
-  @override
-  String get undoAllow => 'Allow';
 }

@@ -64,10 +64,8 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
       switch (event) {
         case 'DRAW_OFFERED':
           _showDrawOfferDialog();
-        case 'UNDO_REQUESTED':
-          _showUndoRequestDialog();
         default:
-          if (!event.startsWith('DRAW_') && !event.startsWith('UNDO_')) {
+          if (!event.startsWith('DRAW_')) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(event)),
             );
@@ -107,33 +105,6 @@ class _ChessGameScreenState extends State<ChessGameScreen> {
               _session.acceptDraw();
             },
             child: Text(l10n.drawAccept),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showUndoRequestDialog() {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.undoRequestedTitle),
-        content: Text(l10n.undoRequestedContent),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _session.declineUndo();
-            },
-            child: Text(l10n.drawDecline),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _session.acceptUndo();
-            },
-            child: Text(l10n.undoAllow),
           ),
         ],
       ),

@@ -80,12 +80,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawAccept => 'Aceitar';
 
   @override
-  String get undoRequestedTitle => 'Desfazer solicitado';
+  String get openingRollTitle => 'Lançamento inicial';
 
   @override
-  String get undoRequestedContent =>
-      'Seu oponente quer desfazer o último movimento. Permitir?';
+  String get openingRollInstruction =>
+      'Cada jogador lança — o maior vai primeiro';
 
   @override
-  String get undoAllow => 'Permitir';
+  String get openingRollTie => 'Empate! Lance novamente';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color vai primeiro!';
+  }
+
+  @override
+  String get scoreWhite => 'Brancas';
+
+  @override
+  String get scoreBlack => 'Pretas';
 }

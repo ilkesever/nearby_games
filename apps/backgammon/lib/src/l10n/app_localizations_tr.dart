@@ -79,12 +79,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get drawAccept => 'Kabul Et';
 
   @override
-  String get undoRequestedTitle => 'Geri Al İsteği';
+  String get openingRollTitle => 'Açılış Zarı';
 
   @override
-  String get undoRequestedContent =>
-      'Rakibiniz son hamlesini geri almak istiyor. İzin verilsin mi?';
+  String get openingRollInstruction =>
+      'Her oyuncu zar atar — en yüksek ilk başlar';
 
   @override
-  String get undoAllow => 'İzin Ver';
+  String get openingRollTie => 'Beraberlik! Tekrar at';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color önce başlar!';
+  }
+
+  @override
+  String get scoreWhite => 'Beyaz';
+
+  @override
+  String get scoreBlack => 'Siyah';
 }

@@ -249,24 +249,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accept'**
   String get drawAccept;
-
-  /// Title of undo request dialog
-  ///
-  /// In en, this message translates to:
-  /// **'Undo Requested'**
-  String get undoRequestedTitle;
-
-  /// Body of undo request dialog
-  ///
-  /// In en, this message translates to:
-  /// **'Your opponent wants to undo their last move. Allow?'**
-  String get undoRequestedContent;
-
-  /// Button to allow an undo
-  ///
-  /// In en, this message translates to:
-  /// **'Allow'**
-  String get undoAllow;
 }
 
 class _AppLocalizationsDelegate

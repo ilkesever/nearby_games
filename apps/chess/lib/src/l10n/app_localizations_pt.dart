@@ -74,14 +74,4 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get drawAccept => 'Aceitar';
-
-  @override
-  String get undoRequestedTitle => 'Desfazer solicitado';
-
-  @override
-  String get undoRequestedContent =>
-      'Seu oponente quer desfazer o último movimento. Permitir?';
-
-  @override
-  String get undoAllow => 'Permitir';
 }

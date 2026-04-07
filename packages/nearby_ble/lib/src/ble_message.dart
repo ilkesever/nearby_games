@@ -106,15 +106,6 @@ enum BleMessageType {
   /// Draw declined.
   drawDecline,
 
-  /// Undo move requested.
-  undoRequest,
-
-  /// Undo accepted.
-  undoAccept,
-
-  /// Undo declined.
-  undoDecline,
-
   /// Keep-alive ping.
   ping,
 
@@ -126,4 +117,7 @@ enum BleMessageType {
 
   /// Custom message type for game-specific extensions.
   custom,
+
+  /// Rematch request — start a new game in the same session.
+  rematch,
 }

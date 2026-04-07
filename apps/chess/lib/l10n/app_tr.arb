@@ -1,6 +1,5 @@
 {
   "@@locale": "tr",
-
   "appTitle": "Yakın Satranç",
   "homeTagline": "Yakınızdaki biriyle satranç oynayın\nİnternet gerekmez",
   "homeYourName": "Adınız",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Beraberlik Teklifi",
   "drawOfferedContent": "Rakibiniz beraberlik teklif ediyor. Kabul et?",
   "drawDecline": "Reddet",
-  "drawAccept": "Kabul Et",
-  "undoRequestedTitle": "Geri Al İsteği",
-  "undoRequestedContent": "Rakibiniz son hamlesini geri almak istiyor. İzin ver?",
-  "undoAllow": "İzin Ver"
+  "drawAccept": "Kabul Et"
 }

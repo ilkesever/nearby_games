@@ -1,6 +1,5 @@
 {
   "@@locale": "es",
-
   "appTitle": "Ajedrez cercano",
   "homeTagline": "Juega al ajedrez con alguien cercano\nSin internet",
   "homeYourName": "Tu nombre",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Tablas ofrecidas",
   "drawOfferedContent": "Tu oponente ofrece tablas. ¿Aceptar?",
   "drawDecline": "Rechazar",
-  "drawAccept": "Aceptar",
-  "undoRequestedTitle": "Deshacer solicitado",
-  "undoRequestedContent": "Tu oponente quiere deshacer su último movimiento. ¿Permitir?",
-  "undoAllow": "Permitir"
+  "drawAccept": "Aceptar"
 }

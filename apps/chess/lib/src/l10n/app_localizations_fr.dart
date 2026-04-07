@@ -76,14 +76,4 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get drawAccept => 'Accepter';
-
-  @override
-  String get undoRequestedTitle => 'Annulation demandée';
-
-  @override
-  String get undoRequestedContent =>
-      'Votre adversaire veut annuler son dernier coup. Autoriser ?';
-
-  @override
-  String get undoAllow => 'Autoriser';
 }

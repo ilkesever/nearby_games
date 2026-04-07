@@ -1,0 +1,7 @@
+# iOS
+app_identifier "com.nearbygames.backgammon"
+apple_id "severilke@gmail.com"
+
+# Android
+json_key_file "fastlane/google-play-key.json"
+package_name "com.nearbygames.backgammon"

@@ -22,6 +22,44 @@ class BackgammonEngine
 
   @override
   BackgammonState applyMove(BackgammonState state, BackgammonMove move) {
+    // --- Opening roll phase ---
+    if (state.phase == GamePhase.openingRoll) {
+      final die = move.dice.first;
+      final isWhite = state.activeColor == BackgammonColor.white;
+      final newW = isWhite ? die : state.whiteOpeningDie;
+      final newB = isWhite ? state.blackOpeningDie : die;
+
+      if (newW != null && newB != null) {
+        if (newW == newB) {
+          // Tie: clear both dice, white rolls again
+          return state.copyWith(
+            whiteOpeningDie: null,
+            blackOpeningDie: null,
+            activeColor: BackgammonColor.white,
+            moveCount: state.moveCount + 1,
+          );
+        }
+        // Winner determined — start the real game
+        return state.copyWith(
+          whiteOpeningDie: null,
+          blackOpeningDie: null,
+          activeColor:
+              newW > newB ? BackgammonColor.white : BackgammonColor.black,
+          phase: GamePhase.rolling,
+          moveCount: state.moveCount + 1,
+        );
+      }
+      // Only one player has rolled — store die, switch to the other player
+      return state.copyWith(
+        whiteOpeningDie: newW,
+        blackOpeningDie: newB,
+        activeColor:
+            isWhite ? BackgammonColor.black : BackgammonColor.white,
+        moveCount: state.moveCount + 1,
+      );
+    }
+
+    // --- Normal checker move ---
     var s = state;
     for (final cm in move.checkerMoves) {
       s = applyCheckerMove(s, cm);
@@ -56,6 +94,22 @@ class BackgammonEngine
   @override
   bool isValidMove(BackgammonState state, BackgammonMove move) {
     if (state.isGameOver) return false;
+
+    // Opening roll: single die, no checker moves, active player hasn't rolled yet
+    if (state.phase == GamePhase.openingRoll) {
+      if (move.dice.length != 1 || move.checkerMoves.isNotEmpty) return false;
+      final die = move.dice.first;
+      if (die < 1 || die > 6) return false;
+      if (state.activeColor == BackgammonColor.white &&
+          state.whiteOpeningDie != null) {
+        return false;
+      }
+      if (state.activeColor == BackgammonColor.black &&
+          state.blackOpeningDie != null) {
+        return false;
+      }
+      return true;
+    }
 
     final dice = move.dice;
     if (dice.length != 2 && dice.length != 4) return false;

@@ -73,13 +73,4 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get drawAccept => 'قبول';
-
-  @override
-  String get undoRequestedTitle => 'طلب تراجع';
-
-  @override
-  String get undoRequestedContent => 'منافسك يريد التراجع عن آخر حركة. سماح؟';
-
-  @override
-  String get undoAllow => 'سماح';
 }

@@ -290,6 +290,16 @@ class BleService {
     }
   }
 
+  /// Reset the BLE service to a clean, idle state between games.
+  ///
+  /// Stops any active hosting/scanning and drops the current connection.
+  /// Unlike [dispose], stream controllers are kept open for reuse.
+  Future<void> reset() async {
+    await disconnect().catchError((_) {});
+    await stopHosting().catchError((_) {});
+    await stopScanning().catchError((_) {});
+  }
+
   /// Clean up all resources.
   ///
   /// Call this when the BLE service is no longer needed.

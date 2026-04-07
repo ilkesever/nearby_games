@@ -1,0 +1,11 @@
+Nearby Backgammon vous permet de défier des amis et des joueurs proches à une partie classique de backgammon via Bluetooth — sans internet.
+
+Ouvrez simplement l'application, découvrez les joueurs à proximité et commencez une partie en quelques secondes. Lancez les dés, déplacez vos pions et profitez de la stratégie intemporelle du backgammon face à face.
+
+Fonctionnalités :
+• Jouez au backgammon avec des joueurs proches via Bluetooth
+• Aucune connexion internet requise
+• Règles classiques du backgammon avec un magnifique plateau
+• Mode passer et jouer pour deux joueurs sur un appareil
+• Matchmaking rapide et facile
+• Fonctionne partout — cafés, parcs, voyages

@@ -1,6 +1,5 @@
 {
   "@@locale": "de",
-
   "appTitle": "Nearby Schach",
   "homeTagline": "Schach mit jemandem in der Nähe spielen\nKein Internet erforderlich",
   "homeYourName": "Dein Name",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Remis angeboten",
   "drawOfferedContent": "Dein Gegner bietet ein Remis an. Annehmen?",
   "drawDecline": "Ablehnen",
-  "drawAccept": "Annehmen",
-  "undoRequestedTitle": "Rückzug angefragt",
-  "undoRequestedContent": "Dein Gegner möchte seinen letzten Zug rückgängig machen. Erlauben?",
-  "undoAllow": "Erlauben"
+  "drawAccept": "Annehmen"
 }

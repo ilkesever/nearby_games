@@ -23,7 +23,10 @@
   "drawOfferedContent": "Rakibiniz beraberlik teklif ediyor. Kabul edilsin mi?",
   "drawDecline": "Reddet",
   "drawAccept": "Kabul Et",
-  "undoRequestedTitle": "Geri Al İsteği",
-  "undoRequestedContent": "Rakibiniz son hamlesini geri almak istiyor. İzin verilsin mi?",
-  "undoAllow": "İzin Ver"
+  "openingRollTitle": "Açılış Zarı",
+  "openingRollInstruction": "Her oyuncu zar atar — en yüksek ilk başlar",
+  "openingRollTie": "Beraberlik! Tekrar at",
+  "openingRollGoesFirst": "{color} önce başlar!",
+  "scoreWhite": "Beyaz",
+  "scoreBlack": "Siyah"
 }

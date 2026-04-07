@@ -256,23 +256,41 @@ abstract class AppLocalizations {
   /// **'Accept'**
   String get drawAccept;
 
-  /// Title of undo request dialog
+  /// Title for the opening roll phase
   ///
   /// In en, this message translates to:
-  /// **'Undo Requested'**
-  String get undoRequestedTitle;
+  /// **'Opening Roll'**
+  String get openingRollTitle;
 
-  /// Body of undo request dialog
+  /// Instruction shown during opening roll
   ///
   /// In en, this message translates to:
-  /// **'Your opponent wants to undo their last move. Allow?'**
-  String get undoRequestedContent;
+  /// **'Each player taps to roll — highest goes first'**
+  String get openingRollInstruction;
 
-  /// Button to allow an undo
+  /// Message when opening roll is a tie
   ///
   /// In en, this message translates to:
-  /// **'Allow'**
-  String get undoAllow;
+  /// **'Tie! Roll again'**
+  String get openingRollTie;
+
+  /// Announcement of who goes first after opening roll
+  ///
+  /// In en, this message translates to:
+  /// **'{color} goes first!'**
+  String openingRollGoesFirst(String color);
+
+  /// Label for white player score
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get scoreWhite;
+
+  /// Label for black player score
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get scoreBlack;
 }
 
 class _AppLocalizationsDelegate

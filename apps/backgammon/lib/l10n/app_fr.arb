@@ -23,7 +23,10 @@
   "drawOfferedContent": "Votre adversaire propose la nulle. Accepter ?",
   "drawDecline": "Refuser",
   "drawAccept": "Accepter",
-  "undoRequestedTitle": "Annulation demandée",
-  "undoRequestedContent": "Votre adversaire veut annuler son dernier coup. Autoriser ?",
-  "undoAllow": "Autoriser"
+  "openingRollTitle": "Lancer initial",
+  "openingRollInstruction": "Chaque joueur lance — le plus haut commence",
+  "openingRollTie": "Égalité ! Relancez",
+  "openingRollGoesFirst": "{color} commence !",
+  "scoreWhite": "Blanc",
+  "scoreBlack": "Noir"
 }

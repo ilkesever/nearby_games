@@ -1,6 +1,5 @@
 {
   "@@locale": "fr",
-
   "appTitle": "Échecs à proximité",
   "homeTagline": "Jouez aux échecs avec quelqu'un à proximité\nSans internet",
   "homeYourName": "Votre nom",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Nulle proposée",
   "drawOfferedContent": "Votre adversaire propose la nulle. Accepter ?",
   "drawDecline": "Refuser",
-  "drawAccept": "Accepter",
-  "undoRequestedTitle": "Annulation demandée",
-  "undoRequestedContent": "Votre adversaire veut annuler son dernier coup. Autoriser ?",
-  "undoAllow": "Autoriser"
+  "drawAccept": "Accepter"
 }

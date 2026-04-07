@@ -79,12 +79,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get drawAccept => 'Принять';
 
   @override
-  String get undoRequestedTitle => 'Запрос отмены хода';
+  String get openingRollTitle => 'Начальный бросок';
 
   @override
-  String get undoRequestedContent =>
-      'Противник хочет отменить последний ход. Разрешить?';
+  String get openingRollInstruction =>
+      'Каждый игрок бросает — у кого больше, тот ходит первым';
 
   @override
-  String get undoAllow => 'Разрешить';
+  String get openingRollTie => 'Ничья! Бросайте снова';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color ходит первым!';
+  }
+
+  @override
+  String get scoreWhite => 'Белые';
+
+  @override
+  String get scoreBlack => 'Чёрные';
 }

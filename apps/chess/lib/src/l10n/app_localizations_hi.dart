@@ -76,14 +76,4 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get drawAccept => 'स्वीकार करें';
-
-  @override
-  String get undoRequestedTitle => 'अनडू का अनुरोध';
-
-  @override
-  String get undoRequestedContent =>
-      'प्रतिद्वंद्वी अपनी आखिरी चाल वापस लेना चाहता है। अनुमति दें?';
-
-  @override
-  String get undoAllow => 'अनुमति दें';
 }

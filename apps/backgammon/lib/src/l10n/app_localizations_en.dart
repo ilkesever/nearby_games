@@ -79,12 +79,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawAccept => 'Accept';
 
   @override
-  String get undoRequestedTitle => 'Undo Requested';
+  String get openingRollTitle => 'Opening Roll';
 
   @override
-  String get undoRequestedContent =>
-      'Your opponent wants to undo their last move. Allow?';
+  String get openingRollInstruction =>
+      'Each player taps to roll — highest goes first';
 
   @override
-  String get undoAllow => 'Allow';
+  String get openingRollTie => 'Tie! Roll again';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color goes first!';
+  }
+
+  @override
+  String get scoreWhite => 'White';
+
+  @override
+  String get scoreBlack => 'Black';
 }

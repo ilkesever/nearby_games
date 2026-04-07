@@ -78,11 +78,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get drawAccept => '接受';
 
   @override
-  String get undoRequestedTitle => '请求悔棋';
+  String get openingRollTitle => '开局掷骰';
 
   @override
-  String get undoRequestedContent => '对手想悔棋。允许？';
+  String get openingRollInstruction => '每位玩家掷骰 — 点数高者先行';
 
   @override
-  String get undoAllow => '允许';
+  String get openingRollTie => '平局！重新掷骰';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color先行！';
+  }
+
+  @override
+  String get scoreWhite => '白棋';
+
+  @override
+  String get scoreBlack => '黑棋';
 }

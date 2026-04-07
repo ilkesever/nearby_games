@@ -23,7 +23,10 @@
   "drawOfferedContent": "Противник предлагает ничью. Принять?",
   "drawDecline": "Отклонить",
   "drawAccept": "Принять",
-  "undoRequestedTitle": "Запрос отмены хода",
-  "undoRequestedContent": "Противник хочет отменить последний ход. Разрешить?",
-  "undoAllow": "Разрешить"
+  "openingRollTitle": "Начальный бросок",
+  "openingRollInstruction": "Каждый игрок бросает — у кого больше, тот ходит первым",
+  "openingRollTie": "Ничья! Бросайте снова",
+  "openingRollGoesFirst": "{color} ходит первым!",
+  "scoreWhite": "Белые",
+  "scoreBlack": "Чёрные"
 }

@@ -11,6 +11,9 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
   final Widget gameBoard;
   final Color? accentColor;
   final VoidCallback? onExit;
+  /// Optional banner shown between the status bar and the game board.
+  /// Used by games to display a score bar in a consistent position.
+  final Widget? scoreBannerWidget;
 
   const GameScaffold({
     super.key,
@@ -19,6 +22,7 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
     required this.gameBoard,
     this.accentColor,
     this.onExit,
+    this.scoreBannerWidget,
   });
 
   @override
@@ -43,8 +47,6 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
                 PopupMenuItem(value: 'resign', child: Text(l10n.gameResign)),
                 PopupMenuItem(
                     value: 'draw', child: Text(l10n.gameOfferDraw)),
-                PopupMenuItem(
-                    value: 'undo', child: Text(l10n.gameRequestUndo)),
               ],
             ),
         ],
@@ -66,6 +68,7 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
                 _StatusBar(
                     session: session,
                     accentColor: accent),
+                if (scoreBannerWidget != null) scoreBannerWidget!,
                 Expanded(child: Center(child: gameBoard)),
                 _PlayerBar(
                   name: session.localPlayer?.name ?? l10n.gameYou,
@@ -91,11 +94,6 @@ class GameScaffold<TState extends GameState, TMove> extends StatelessWidget {
         session.offerDraw();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.gameDrawOfferSent)),
-        );
-      case 'undo':
-        session.requestUndo();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.gameUndoRequestSent)),
         );
     }
   }

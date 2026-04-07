@@ -79,12 +79,23 @@ class AppLocalizationsBn extends AppLocalizations {
   String get drawAccept => 'গ্রহণ';
 
   @override
-  String get undoRequestedTitle => 'আনডু অনুরোধ';
+  String get openingRollTitle => 'Opening Roll';
 
   @override
-  String get undoRequestedContent =>
-      'প্রতিপক্ষ শেষ চাল ফেরাতে চায়। অনুমতি দেবেন?';
+  String get openingRollInstruction =>
+      'Each player taps to roll — highest goes first';
 
   @override
-  String get undoAllow => 'অনুমতি দিন';
+  String get openingRollTie => 'Tie! Roll again';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color goes first!';
+  }
+
+  @override
+  String get scoreWhite => 'সাদা';
+
+  @override
+  String get scoreBlack => 'কালো';
 }

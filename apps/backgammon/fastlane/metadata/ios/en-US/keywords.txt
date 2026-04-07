@@ -1,0 +1,1 @@
+backgammon,bluetooth,board game,dice,offline,nearby,friends,strategy,multiplayer,classic

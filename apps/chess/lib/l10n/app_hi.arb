@@ -1,6 +1,5 @@
 {
   "@@locale": "hi",
-
   "appTitle": "नज़दीकी शतरंज",
   "homeTagline": "किसी नज़दीकी के साथ शतरंज खेलें\nइंटरनेट की जरूरत नहीं",
   "homeYourName": "आपका नाम",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "ड्रॉ ऑफर",
   "drawOfferedContent": "आपका प्रतिद्वंद्वी ड्रॉ की पेशकश कर रहा है। स्वीकार करें?",
   "drawDecline": "अस्वीकार करें",
-  "drawAccept": "स्वीकार करें",
-  "undoRequestedTitle": "अनडू का अनुरोध",
-  "undoRequestedContent": "प्रतिद्वंद्वी अपनी आखिरी चाल वापस लेना चाहता है। अनुमति दें?",
-  "undoAllow": "अनुमति दें"
+  "drawAccept": "स्वीकार करें"
 }

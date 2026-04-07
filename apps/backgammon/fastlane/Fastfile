@@ -1,0 +1,90 @@
+default_platform(:ios)
+
+# Helper: load App Store Connect API key from JSON file
+def asc_api_key
+  json = JSON.parse(File.read(File.join(File.dirname(__FILE__), "app-store-connect-api-key.json")))
+  app_store_connect_api_key(
+    key_id: json["key_id"],
+    issuer_id: json["issuer_id"],
+    key_content: json["key"]
+  )
+end
+
+# ─── iOS ──────────────────────────────────────────────────────────────────────
+
+platform :ios do
+  desc "Create the app record in App Store Connect (run once)"
+  lane :create_app do
+    asc_api_key
+    produce(
+      app_identifier: "com.nearbygames.backgammon",
+      app_name: "Nearby Backgammon",
+      language: "English",
+      app_version: "1.0.0",
+      sku: "com.nearbygames.backgammon",
+      platform: "ios"
+    )
+  end
+
+  desc "Build and upload IPA to App Store Connect"
+  lane :release do
+    build_app(
+      workspace: "ios/Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+    upload_to_app_store(
+      skip_metadata: true,
+      skip_screenshots: true,
+      ignore_language_directory_validation: true,
+      api_key_path: "fastlane/app-store-connect-api-key.json"
+    )
+  end
+
+  desc "Upload localized App Store metadata (name, subtitle, description, keywords, etc.)"
+  lane :update_metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_app_version_update: true,  # Avoids review-detail fetch bug on new apps (fastlane < 2.232)
+      force: true,
+      precheck_include_in_app_purchases: false,
+      metadata_path: "./fastlane/metadata/ios",
+      api_key_path: "fastlane/app-store-connect-api-key.json"
+    )
+  end
+end
+
+# ─── Android ──────────────────────────────────────────────────────────────────
+
+platform :android do
+  desc "Build AAB and upload to Google Play internal testing track"
+  lane :release do
+    sh("cd .. && flutter build appbundle --release --split-debug-info=build/debug-info")
+    upload_to_play_store(
+      track: "internal",
+      aab: "build/app/outputs/bundle/release/app-release.aab",
+      json_key: "fastlane/google-play-key.json"
+    )
+  end
+
+  desc "Upload localized Google Play Store metadata (title, descriptions, changelogs, etc.)"
+  lane :update_metadata do
+    supply(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      metadata_path: "./fastlane/metadata/android",
+      json_key: "fastlane/google-play-key.json"
+    )
+  end
+end
+
+# ─── All Platforms ────────────────────────────────────────────────────────────
+
+desc "Upload metadata to both App Store and Google Play"
+lane :update_all_metadata do
+  sh("bundle exec fastlane ios update_metadata")
+  sh("bundle exec fastlane android update_metadata")
+end

@@ -6,6 +6,12 @@ import '../game/backgammon_engine.dart';
 import '../game/backgammon_move.dart';
 import '../game/backgammon_state.dart';
 
+class OpponentPreview {
+  final List<int> dice;
+  final List<CheckerMove> moves;
+  const OpponentPreview({required this.dice, required this.moves});
+}
+
 class BackgammonBoardWidget extends StatefulWidget {
   final BackgammonState state;
   final BackgammonEngine engine;
@@ -13,6 +19,8 @@ class BackgammonBoardWidget extends StatefulWidget {
   final bool flipped;
   final BackgammonMove? lastMove;
   final void Function(BackgammonMove)? onMove;
+  final void Function(List<int> dice, List<CheckerMove> moves)? onPreviewChanged;
+  final OpponentPreview? opponentPreview;
 
   const BackgammonBoardWidget({
     super.key,
@@ -22,6 +30,8 @@ class BackgammonBoardWidget extends StatefulWidget {
     required this.flipped,
     this.lastMove,
     this.onMove,
+    this.onPreviewChanged,
+    this.opponentPreview,
   });
 
   @override
@@ -40,6 +50,8 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
   // Tracks the board state after each pending checker move so that
   // subsequent move hints are computed on the correct intermediate position.
   late BackgammonState _currentBoardState;
+  // Opening roll: die rolled locally but not yet submitted to engine
+  int? _localOpeningDie;
 
   @override
   void initState() {
@@ -63,6 +75,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     _validDestinations = [];
     _combinedMoveMap = {};
     _currentBoardState = widget.state;
+    _localOpeningDie = null;
   }
 
   List<int> get _remainingDice {
@@ -73,7 +86,28 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     return remaining;
   }
 
-  bool get _canSubmit => _pendingMoves.isNotEmpty || _noMoreMoves;
+  bool get _canSubmit => _remainingDice.isEmpty || _noMoreMoves;
+
+  void _emitPreview() {
+    widget.onPreviewChanged?.call(
+      List.unmodifiable(_rolledDice),
+      List.unmodifiable(_pendingMoves),
+    );
+  }
+
+  /// Board state to display — uses opponent preview when waiting.
+  BackgammonState get _displayState {
+    if (!widget.interactive &&
+        widget.opponentPreview != null &&
+        widget.opponentPreview!.moves.isNotEmpty) {
+      var s = widget.state;
+      for (final cm in widget.opponentPreview!.moves) {
+        s = widget.engine.applyCheckerMove(s, cm);
+      }
+      return s;
+    }
+    return _currentBoardState;
+  }
 
   bool get _noMoreMoves {
     if (_remainingDice.isEmpty) return false;
@@ -83,6 +117,193 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
           remainingDice: _remainingDice,
         ))
         .isEmpty;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Opening roll
+  // ---------------------------------------------------------------------------
+
+  void _rollOpeningDie() {
+    if (!widget.interactive || _localOpeningDie != null) return;
+    final die = math.Random().nextInt(6) + 1;
+    setState(() => _localOpeningDie = die);
+    // Show result briefly before committing to the engine
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        widget.onMove
+            ?.call(BackgammonMove(dice: [die], checkerMoves: const []));
+        setState(() => _localOpeningDie = null);
+      }
+    });
+  }
+
+  Widget _buildOpeningRollView() {
+    final s = widget.state;
+    final isWhiteActive = s.activeColor == BackgammonColor.white;
+
+    // Compute displayed die values: committed (from state) or locally rolled
+    final displayWhite = s.whiteOpeningDie ??
+        (isWhiteActive && _localOpeningDie != null ? _localOpeningDie : null);
+    final displayBlack = s.blackOpeningDie ??
+        (!isWhiteActive && _localOpeningDie != null ? _localOpeningDie : null);
+    final bothKnown = displayWhite != null && displayBlack != null;
+
+    String statusText;
+    Color statusColor = Colors.brown[700]!;
+    if (displayWhite != null && displayBlack != null) {
+      if (displayWhite == displayBlack) {
+        statusText = 'Tie! Roll again';
+        statusColor = Colors.red[700]!;
+      } else {
+        final winner = displayWhite > displayBlack ? 'White' : 'Black';
+        statusText = '$winner goes first!';
+        statusColor = Colors.green[700]!;
+      }
+    } else if (s.whiteOpeningDie != null) {
+      statusText = widget.interactive ? 'Your turn — tap to roll' : 'Black to roll…';
+    } else if (s.blackOpeningDie != null) {
+      statusText = widget.interactive ? 'Your turn — tap to roll' : 'White to roll…';
+    } else {
+      statusText = widget.interactive ? 'Tap your die to roll' : 'Waiting for opponent…';
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Opening Roll',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.brown[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              statusText,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: statusColor,
+                fontWeight: bothKnown ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildOpeningDieCard(
+                  label: 'White',
+                  chipColor: Colors.white,
+                  borderColor: Colors.brown[400]!,
+                  die: displayWhite,
+                  canRoll: widget.interactive &&
+                      isWhiteActive &&
+                      s.whiteOpeningDie == null &&
+                      _localOpeningDie == null,
+                  isWinner: displayWhite != null &&
+                      displayBlack != null &&
+                      displayWhite > displayBlack,
+                ),
+                _buildOpeningDieCard(
+                  label: 'Black',
+                  chipColor: Colors.grey[850]!,
+                  borderColor: Colors.brown[400]!,
+                  die: displayBlack,
+                  canRoll: widget.interactive &&
+                      !isWhiteActive &&
+                      s.blackOpeningDie == null &&
+                      _localOpeningDie == null,
+                  isWinner: displayWhite != null &&
+                      displayBlack != null &&
+                      displayBlack > displayWhite,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOpeningDieCard({
+    required String label,
+    required Color chipColor,
+    required Color borderColor,
+    required int? die,
+    required bool canRoll,
+    required bool isWinner,
+  }) {
+    return GestureDetector(
+      onTap: canRoll ? _rollOpeningDie : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 120,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isWinner
+              ? Colors.amber[50]
+              : (canRoll ? Colors.brown[50] : Colors.brown[100]),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isWinner ? Colors.amber[700]! : borderColor,
+            width: isWinner ? 2.5 : 1.5,
+          ),
+          boxShadow: canRoll
+              ? [
+                  BoxShadow(
+                    color: Colors.brown.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: chipColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: borderColor, width: 1.5),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.brown[700],
+              ),
+            ),
+            const SizedBox(height: 10),
+            die != null
+                ? _DiceFaceWidget(value: die, used: false)
+                : Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: canRoll ? Colors.brown[200] : Colors.brown[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.brown[300]!, width: 1.5),
+                    ),
+                    child: Icon(
+                      canRoll ? Icons.touch_app : Icons.hourglass_empty,
+                      color: Colors.brown[400],
+                      size: 22,
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _rollDice() {
@@ -106,6 +327,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
           remainingDice: dice,
         ))
         .isEmpty;
+    _emitPreview();
     if (hasNoMoves) {
       Future.delayed(const Duration(milliseconds: 800), _submit);
     }
@@ -218,6 +440,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       _validDestinations = [];
       _combinedMoveMap = {};
     });
+    _emitPreview();
   }
 
   /// Executes a combined (multi-die) move sequence in one setState.
@@ -254,6 +477,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       _validDestinations = [];
       _combinedMoveMap = {};
     });
+    _emitPreview();
   }
 
   void _undo() {
@@ -270,9 +494,11 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       _validDestinations = [];
       _combinedMoveMap = {};
     });
+    _emitPreview();
   }
 
   void _submit() {
+    widget.onPreviewChanged?.call(const [], const []);
     widget.onMove?.call(BackgammonMove(
       dice: _rolledDice,
       checkerMoves: List.unmodifiable(_pendingMoves),
@@ -286,6 +512,11 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // Show opening roll UI instead of the board during the opening phase
+    if (widget.state.phase == GamePhase.openingRoll) {
+      return _buildOpeningRollView();
+    }
+
     final isRolling =
         widget.interactive && widget.state.phase == GamePhase.rolling && _rolledDice.isEmpty;
 
@@ -314,12 +545,13 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
                     _handleBoardTap(details.localPosition, boardWidth, boardHeight),
                 child: CustomPaint(
                   painter: _BoardPainter(
-                    state: _currentBoardState,
+                    state: _displayState,
                     flipped: widget.flipped,
                     selectedPoint: _selectedPoint,
                     validDests: _validDestinations.map((m) => m.to).toSet(),
                     combinedDests: _combinedMoveMap.keys.toSet(),
                     lastMove: widget.lastMove,
+                    opponentPreview: widget.opponentPreview,
                   ),
                   child: const SizedBox.expand(),
                 ),
@@ -340,9 +572,10 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
   }
 
   Widget _buildBorneOffRow(BackgammonColor color, double width) {
+    final boardState = _displayState;
     final count = color == BackgammonColor.white
-        ? _currentBoardState.whiteBorneOff
-        : _currentBoardState.blackBorneOff;
+        ? boardState.whiteBorneOff
+        : boardState.blackBorneOff;
     final label = color == BackgammonColor.white ? 'White' : 'Black';
     final checkerColor =
         color == BackgammonColor.white ? Colors.white : Colors.brown[900]!;
@@ -399,7 +632,15 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       );
     }
 
-    if (_rolledDice.isEmpty) return const SizedBox.shrink();
+    if (_rolledDice.isEmpty) {
+      // Show live opponent preview when they're actively playing
+      if (!widget.interactive &&
+          widget.opponentPreview != null &&
+          widget.opponentPreview!.dice.isNotEmpty) {
+        return _buildLivePreviewDice(widget.opponentPreview!);
+      }
+      return const SizedBox.shrink();
+    }
 
     final usedCopy = List<int>.from(_usedDice);
     final usedFlags = _rolledDice.map((d) {
@@ -447,6 +688,54 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
             child: const Text('Done'),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildLivePreviewDice(OpponentPreview preview) {
+    final moveCount = preview.moves.length;
+    // For doubles, dice list has 4 entries; mark first N as used
+    final diceCount = preview.dice.length;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Opponent is playing…',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.brown[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (int i = 0; i < diceCount; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: _DiceFaceWidget(
+                  value: preview.dice[i],
+                  used: i < moveCount,
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -507,6 +796,7 @@ class _BoardPainter extends CustomPainter {
   final Set<int> validDests;
   final Set<int> combinedDests;
   final BackgammonMove? lastMove;
+  final OpponentPreview? opponentPreview;
 
   const _BoardPainter({
     required this.state,
@@ -515,6 +805,7 @@ class _BoardPainter extends CustomPainter {
     required this.validDests,
     required this.combinedDests,
     this.lastMove,
+    this.opponentPreview,
   });
 
   @override
@@ -589,7 +880,8 @@ class _BoardPainter extends CustomPainter {
     final slotW = (w / 2 - w * 0.02 - w * 0.01) / 6;
 
     for (int pt = 1; pt <= 24; pt++) {
-      final isTop = (pt >= 13 && pt <= 24);
+      final logicalIsTop = (pt >= 13 && pt <= 24);
+      final isTop = flipped ? !logicalIsTop : logicalIsTop;
       final isEvenVisual = (flipped ? (25 - pt) : pt) % 2 == 0;
       final baseColor = isEvenVisual
           ? const Color(0xFFD7CCC8) // light
@@ -602,9 +894,22 @@ class _BoardPainter extends CustomPainter {
         color = destColor;
       } else if (combinedDests.contains(pt)) {
         color = combinedDestColor;
+      } else if (opponentPreview != null &&
+          opponentPreview!.moves.any((m) => m.from == pt || m.to == pt)) {
+        final isTarget = opponentPreview!.moves.any((m) => m.to == pt);
+        if (isTarget) {
+          color = const Color(0xFF90CAF9).withValues(alpha: 0.7); // blue: destination
+        } else {
+          color = const Color(0xFFFFCC80).withValues(alpha: 0.7); // orange: source
+        }
       } else if (lastMove?.checkerMoves.any((m) => m.from == pt || m.to == pt) ??
           false) {
-        color = baseColor.withValues(alpha: 0.6);
+        final isTarget = lastMove!.checkerMoves.any((m) => m.to == pt);
+        if (isTarget) {
+          color = const Color(0xFF90CAF9).withValues(alpha: 0.7); // blue: destination
+        } else {
+          color = const Color(0xFFFFCC80).withValues(alpha: 0.7); // orange: source
+        }
       }
 
       _drawTriangle(canvas, _pointX(pt, w), isTop ? 0 : h, slotW, h * 0.42,
@@ -637,7 +942,7 @@ class _BoardPainter extends CustomPainter {
       if (p.isEmpty) continue;
 
       final cx = _pointX(pt, w);
-      final isTop = (pt >= 13 && pt <= 24);
+      final isTop = flipped ? !(pt >= 13 && pt <= 24) : (pt >= 13 && pt <= 24);
       final checkerR = w / 26;
       final count = p.count;
 

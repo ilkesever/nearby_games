@@ -78,11 +78,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get drawAccept => 'قبول';
 
   @override
-  String get undoRequestedTitle => 'طلب تراجع';
+  String get openingRollTitle => 'رمي البداية';
 
   @override
-  String get undoRequestedContent => 'يريد خصمك التراجع عن آخر حركة. السماح؟';
+  String get openingRollInstruction => 'يرمي كل لاعب — الأعلى يبدأ أولاً';
 
   @override
-  String get undoAllow => 'سماح';
+  String get openingRollTie => 'تعادل! ارمِ مجدداً';
+
+  @override
+  String openingRollGoesFirst(String color) {
+    return '$color يبدأ أولاً!';
+  }
+
+  @override
+  String get scoreWhite => 'الأبيض';
+
+  @override
+  String get scoreBlack => 'الأسود';
 }

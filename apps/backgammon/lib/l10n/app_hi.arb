@@ -23,7 +23,10 @@
   "drawOfferedContent": "आपके प्रतिद्वंद्वी ने ड्रॉ का प्रस्ताव दिया। स्वीकार करें?",
   "drawDecline": "अस्वीकार करें",
   "drawAccept": "स्वीकार करें",
-  "undoRequestedTitle": "वापस लेने का अनुरोध",
-  "undoRequestedContent": "प्रतिद्वंद्वी अपनी चाल वापस लेना चाहता है। अनुमति दें?",
-  "undoAllow": "अनुमति दें"
+  "openingRollTitle": "Opening Roll",
+  "openingRollInstruction": "Each player taps to roll — highest goes first",
+  "openingRollTie": "Tie! Roll again",
+  "openingRollGoesFirst": "{color} goes first!",
+  "scoreWhite": "सफेद",
+  "scoreBlack": "काला"
 }

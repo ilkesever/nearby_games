@@ -1,6 +1,5 @@
 {
   "@@locale": "ru",
-
   "appTitle": "Шахматы рядом",
   "homeTagline": "Играйте в шахматы с кем-то поблизости\nИнтернет не нужен",
   "homeYourName": "Ваше имя",
@@ -22,8 +21,5 @@
   "drawOfferedTitle": "Предложена ничья",
   "drawOfferedContent": "Соперник предлагает ничью. Принять?",
   "drawDecline": "Отклонить",
-  "drawAccept": "Принять",
-  "undoRequestedTitle": "Запрос отмены",
-  "undoRequestedContent": "Соперник хочет отменить последний ход. Разрешить?",
-  "undoAllow": "Разрешить"
+  "drawAccept": "Принять"
 }

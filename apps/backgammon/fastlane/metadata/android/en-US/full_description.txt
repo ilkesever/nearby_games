@@ -1,0 +1,11 @@
+Nearby Backgammon lets you challenge friends and players around you to a classic game of backgammon over Bluetooth — no internet required.
+
+Simply open the app, discover nearby players, and start a match in seconds. Roll the dice, move your checkers, and enjoy the timeless strategy of backgammon face-to-face with anyone around you.
+
+Features:
+• Play backgammon with nearby players via Bluetooth
+• No internet connection required
+• Classic backgammon rules with a beautiful board
+• Pass & Play mode for two players on one device
+• Fast and easy matchmaking
+• Works anywhere — cafes, parks, travel

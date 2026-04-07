@@ -23,7 +23,10 @@
   "drawOfferedContent": "对手提出和棋。接受？",
   "drawDecline": "拒绝",
   "drawAccept": "接受",
-  "undoRequestedTitle": "请求悔棋",
-  "undoRequestedContent": "对手想悔棋。允许？",
-  "undoAllow": "允许"
+  "openingRollTitle": "开局掷骰",
+  "openingRollInstruction": "每位玩家掷骰 — 点数高者先行",
+  "openingRollTie": "平局！重新掷骰",
+  "openingRollGoesFirst": "{color}先行！",
+  "scoreWhite": "白棋",
+  "scoreBlack": "黑棋"
 }

@@ -23,7 +23,10 @@
   "drawOfferedContent": "Lawan Anda menawarkan seri. Terima?",
   "drawDecline": "Tolak",
   "drawAccept": "Terima",
-  "undoRequestedTitle": "Permintaan Batalkan",
-  "undoRequestedContent": "Lawan ingin membatalkan gerakan terakhir. Izinkan?",
-  "undoAllow": "Izinkan"
+  "openingRollTitle": "Lemparan Awal",
+  "openingRollInstruction": "Setiap pemain melempar — angka tertinggi mulai duluan",
+  "openingRollTie": "Seri! Lempar lagi",
+  "openingRollGoesFirst": "{color} mulai duluan!",
+  "scoreWhite": "Putih",
+  "scoreBlack": "Hitam"
 }

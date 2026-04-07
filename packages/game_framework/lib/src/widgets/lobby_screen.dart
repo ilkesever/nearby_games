@@ -102,6 +102,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       _errorMessage = null;
     });
     try {
+      await widget.bleService.stopScanning().catchError((_) {});
       await widget.bleService.startHosting(
         gameType: widget.gameType,
         playerName: widget.playerName,
@@ -121,6 +122,7 @@ class _LobbyScreenState extends State<LobbyScreen>
       _errorMessage = null;
     });
     try {
+      await widget.bleService.stopHosting().catchError((_) {});
       await widget.bleService.startScanning(gameType: widget.gameType);
     } catch (e) {
       setState(() {
