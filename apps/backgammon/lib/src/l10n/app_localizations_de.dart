@@ -98,4 +98,33 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Schwarz';
+
+  @override
+  String get openingRollYourTurn => 'Du bist dran — tippe zum Würfeln';
+
+  @override
+  String get openingRollBlackToRoll => 'Schwarz würfelt…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Weiß würfelt…';
+
+  @override
+  String get openingRollTapToRoll => 'Tippe auf deinen Würfel';
+
+  @override
+  String get openingRollWaitingForOpponent => 'Warte auf Gegner…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color ausgewürfelt: ';
+  }
+
+  @override
+  String get moveUndo => 'Rückgängig';
+
+  @override
+  String get moveDone => 'Fertig';
+
+  @override
+  String get opponentPlaying => 'Gegner spielt…';
 }

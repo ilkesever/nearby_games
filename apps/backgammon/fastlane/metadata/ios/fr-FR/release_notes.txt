@@ -1,4 +1,3 @@
-• Version initiale
-• Multijoueur Bluetooth — sans internet
-• Mode local passer et jouer
-• 12 langues : arabe, bengali, chinois, anglais, français, allemand, hindi, indonésien, portugais, russe, espagnol, turc
+• Correction des traductions manquantes pour l'hindi et le bengali
+• Localisation de tous les textes du jeu, y compris le lancer initial, la sortie et les boutons d'action
+• Corrections et améliorations

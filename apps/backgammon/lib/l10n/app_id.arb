@@ -28,5 +28,14 @@
   "openingRollTie": "Seri! Lempar lagi",
   "openingRollGoesFirst": "{color} mulai duluan!",
   "scoreWhite": "Putih",
-  "scoreBlack": "Hitam"
+  "scoreBlack": "Hitam",
+  "openingRollYourTurn": "Giliran Anda — ketuk untuk melempar",
+  "openingRollBlackToRoll": "Hitam melempar…",
+  "openingRollWhiteToRoll": "Putih melempar…",
+  "openingRollTapToRoll": "Ketuk dadu Anda untuk melempar",
+  "openingRollWaitingForOpponent": "Menunggu lawan…",
+  "boreOffLabel": "{color} keluar: ",
+  "moveUndo": "Urungkan",
+  "moveDone": "Selesai",
+  "opponentPlaying": "Lawan sedang bermain…"
 }

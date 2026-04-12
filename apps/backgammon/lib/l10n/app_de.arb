@@ -28,5 +28,14 @@
   "openingRollTie": "Unentschieden! Nochmal würfeln",
   "openingRollGoesFirst": "{color} beginnt!",
   "scoreWhite": "Weiß",
-  "scoreBlack": "Schwarz"
+  "scoreBlack": "Schwarz",
+  "openingRollYourTurn": "Du bist dran — tippe zum Würfeln",
+  "openingRollBlackToRoll": "Schwarz würfelt…",
+  "openingRollWhiteToRoll": "Weiß würfelt…",
+  "openingRollTapToRoll": "Tippe auf deinen Würfel",
+  "openingRollWaitingForOpponent": "Warte auf Gegner…",
+  "boreOffLabel": "{color} ausgewürfelt: ",
+  "moveUndo": "Rückgängig",
+  "moveDone": "Fertig",
+  "opponentPlaying": "Gegner spielt…"
 }

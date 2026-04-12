@@ -99,4 +99,33 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Pretas';
+
+  @override
+  String get openingRollYourTurn => 'Sua vez — toque para lançar';
+
+  @override
+  String get openingRollBlackToRoll => 'Pretas lançam…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Brancas lançam…';
+
+  @override
+  String get openingRollTapToRoll => 'Toque no seu dado para lançar';
+
+  @override
+  String get openingRollWaitingForOpponent => 'Aguardando oponente…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color retiradas: ';
+  }
+
+  @override
+  String get moveUndo => 'Desfazer';
+
+  @override
+  String get moveDone => 'Confirmar';
+
+  @override
+  String get opponentPlaying => 'Oponente está jogando…';
 }

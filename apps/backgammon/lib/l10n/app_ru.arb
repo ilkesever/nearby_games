@@ -28,5 +28,14 @@
   "openingRollTie": "Ничья! Бросайте снова",
   "openingRollGoesFirst": "{color} ходит первым!",
   "scoreWhite": "Белые",
-  "scoreBlack": "Чёрные"
+  "scoreBlack": "Чёрные",
+  "openingRollYourTurn": "Ваш ход — нажмите, чтобы бросить",
+  "openingRollBlackToRoll": "Чёрные бросают…",
+  "openingRollWhiteToRoll": "Белые бросают…",
+  "openingRollTapToRoll": "Нажмите на кубик, чтобы бросить",
+  "openingRollWaitingForOpponent": "Ожидание противника…",
+  "boreOffLabel": "{color} выведены: ",
+  "moveUndo": "Отменить",
+  "moveDone": "Готово",
+  "opponentPlaying": "Противник играет…"
 }

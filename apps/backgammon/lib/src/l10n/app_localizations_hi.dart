@@ -80,18 +80,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get drawAccept => 'स्वीकार करें';
 
   @override
-  String get openingRollTitle => 'Opening Roll';
+  String get openingRollTitle => 'शुरुआती रोल';
 
   @override
   String get openingRollInstruction =>
-      'Each player taps to roll — highest goes first';
+      'हर खिलाड़ी रोल करने के लिए टैप करे — सबसे ऊँचा पहले चलेगा';
 
   @override
-  String get openingRollTie => 'Tie! Roll again';
+  String get openingRollTie => 'बराबरी! फिर से रोल करें';
 
   @override
   String openingRollGoesFirst(String color) {
-    return '$color goes first!';
+    return '$color पहले चलेगा!';
   }
 
   @override
@@ -99,4 +99,33 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get scoreBlack => 'काला';
+
+  @override
+  String get openingRollYourTurn => 'आपकी बारी — रोल करने के लिए टैप करें';
+
+  @override
+  String get openingRollBlackToRoll => 'काले का रोल…';
+
+  @override
+  String get openingRollWhiteToRoll => 'सफेद का रोल…';
+
+  @override
+  String get openingRollTapToRoll => 'रोल करने के लिए अपना पासा टैप करें';
+
+  @override
+  String get openingRollWaitingForOpponent => 'प्रतिद्वंद्वी की प्रतीक्षा…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color बाहर: ';
+  }
+
+  @override
+  String get moveUndo => 'वापस';
+
+  @override
+  String get moveDone => 'पूर्ण';
+
+  @override
+  String get opponentPlaying => 'प्रतिद्वंद्वी खेल रहा है…';
 }

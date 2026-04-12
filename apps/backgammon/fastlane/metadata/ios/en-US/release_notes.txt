@@ -1,4 +1,3 @@
-• Initial release
-• Bluetooth multiplayer — no internet required
-• Pass & Play local mode
-• 12 languages: Arabic, Bengali, Chinese, English, French, German, Hindi, Indonesian, Portuguese, Russian, Spanish, Turkish
+• Fixed missing translations for Hindi and Bengali
+• Localized all in-game text including opening roll, bore-off labels, and action buttons
+• Bug fixes and improvements

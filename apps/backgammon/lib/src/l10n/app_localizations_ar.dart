@@ -96,4 +96,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get scoreBlack => 'الأسود';
+
+  @override
+  String get openingRollYourTurn => 'دورك — اضغط لرمي النرد';
+
+  @override
+  String get openingRollBlackToRoll => 'دور الأسود للرمي…';
+
+  @override
+  String get openingRollWhiteToRoll => 'دور الأبيض للرمي…';
+
+  @override
+  String get openingRollTapToRoll => 'اضغط على نردك لرمي';
+
+  @override
+  String get openingRollWaitingForOpponent => 'بانتظار الخصم…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color أخرج: ';
+  }
+
+  @override
+  String get moveUndo => 'تراجع';
+
+  @override
+  String get moveDone => 'تم';
+
+  @override
+  String get opponentPlaying => 'الخصم يلعب…';
 }

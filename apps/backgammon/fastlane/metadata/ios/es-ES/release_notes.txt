@@ -1,4 +1,3 @@
-• Versión inicial
-• Multijugador por Bluetooth — sin internet
-• Modo local para pasar y jugar
-• 12 idiomas: árabe, bengalí, chino, inglés, francés, alemán, hindi, indonesio, portugués, ruso, español, turco
+• Corrección de traducciones faltantes para hindi y bengalí
+• Localización de todo el texto del juego, incluyendo tirada inicial, fichas sacadas y botones de acción
+• Correcciones y mejoras

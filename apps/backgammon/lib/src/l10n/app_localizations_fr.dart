@@ -100,4 +100,33 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Noir';
+
+  @override
+  String get openingRollYourTurn => 'Votre tour — appuyez pour lancer';
+
+  @override
+  String get openingRollBlackToRoll => 'Noir lance…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Blanc lance…';
+
+  @override
+  String get openingRollTapToRoll => 'Appuyez sur votre dé pour lancer';
+
+  @override
+  String get openingRollWaitingForOpponent => 'En attente de l\'adversaire…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color sortis : ';
+  }
+
+  @override
+  String get moveUndo => 'Annuler';
+
+  @override
+  String get moveDone => 'Valider';
+
+  @override
+  String get opponentPlaying => 'L\'adversaire joue…';
 }

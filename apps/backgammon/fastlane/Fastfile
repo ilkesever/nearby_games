@@ -37,6 +37,7 @@ platform :ios do
       skip_metadata: true,
       skip_screenshots: true,
       ignore_language_directory_validation: true,
+      precheck_include_in_app_purchases: false,
       api_key_path: "fastlane/app-store-connect-api-key.json"
     )
   end
@@ -50,6 +51,22 @@ platform :ios do
       force: true,
       precheck_include_in_app_purchases: false,
       metadata_path: "./fastlane/metadata/ios",
+      api_key_path: "fastlane/app-store-connect-api-key.json"
+    )
+  end
+
+  desc "Upload App Store screenshots"
+  lane :upload_screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      ignore_language_directory_validation: true,
+      screenshots_path: "./fastlane/screenshots",
       api_key_path: "fastlane/app-store-connect-api-key.json"
     )
   end

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../game/backgammon_engine.dart';
+import '../src/l10n/app_localizations.dart';
 import '../game/backgammon_move.dart';
 import '../game/backgammon_state.dart';
 
@@ -40,6 +41,8 @@ class BackgammonBoardWidget extends StatefulWidget {
 }
 
 class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   List<int> _rolledDice = [];
   List<int> _usedDice = [];
   int? _selectedPoint; // null = none; 0 = bar
@@ -152,19 +155,19 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     Color statusColor = Colors.brown[700]!;
     if (displayWhite != null && displayBlack != null) {
       if (displayWhite == displayBlack) {
-        statusText = 'Tie! Roll again';
+        statusText = _l10n.openingRollTie;
         statusColor = Colors.red[700]!;
       } else {
-        final winner = displayWhite > displayBlack ? 'White' : 'Black';
-        statusText = '$winner goes first!';
+        final winner = displayWhite > displayBlack ? _l10n.scoreWhite : _l10n.scoreBlack;
+        statusText = _l10n.openingRollGoesFirst(winner);
         statusColor = Colors.green[700]!;
       }
     } else if (s.whiteOpeningDie != null) {
-      statusText = widget.interactive ? 'Your turn — tap to roll' : 'Black to roll…';
+      statusText = widget.interactive ? _l10n.openingRollYourTurn : _l10n.openingRollBlackToRoll;
     } else if (s.blackOpeningDie != null) {
-      statusText = widget.interactive ? 'Your turn — tap to roll' : 'White to roll…';
+      statusText = widget.interactive ? _l10n.openingRollYourTurn : _l10n.openingRollWhiteToRoll;
     } else {
-      statusText = widget.interactive ? 'Tap your die to roll' : 'Waiting for opponent…';
+      statusText = widget.interactive ? _l10n.openingRollTapToRoll : _l10n.openingRollWaitingForOpponent;
     }
 
     return Center(
@@ -174,7 +177,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Opening Roll',
+              _l10n.openingRollTitle,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -196,7 +199,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildOpeningDieCard(
-                  label: 'White',
+                  label: _l10n.scoreWhite,
                   chipColor: Colors.white,
                   borderColor: Colors.brown[400]!,
                   die: displayWhite,
@@ -209,7 +212,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
                       displayWhite > displayBlack,
                 ),
                 _buildOpeningDieCard(
-                  label: 'Black',
+                  label: _l10n.scoreBlack,
                   chipColor: Colors.grey[850]!,
                   borderColor: Colors.brown[400]!,
                   die: displayBlack,
@@ -576,7 +579,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     final count = color == BackgammonColor.white
         ? boardState.whiteBorneOff
         : boardState.blackBorneOff;
-    final label = color == BackgammonColor.white ? 'White' : 'Black';
+    final label = color == BackgammonColor.white ? _l10n.scoreWhite : _l10n.scoreBlack;
     final checkerColor =
         color == BackgammonColor.white ? Colors.white : Colors.brown[900]!;
     final canBearOff = _validDestinations.any((d) => d.to == 25);
@@ -597,7 +600,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
         child: Row(
           children: [
             const SizedBox(width: 8),
-            Text('$label bore off: ',
+            Text(_l10n.boreOffLabel(label),
                 style: TextStyle(fontSize: 12, color: Colors.brown[700])),
             for (int i = 0; i < count; i++)
               Container(
@@ -621,7 +624,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
       return ElevatedButton.icon(
         onPressed: _rollDice,
         icon: const Text('🎲', style: TextStyle(fontSize: 20)),
-        label: const Text('Roll Dice', style: TextStyle(fontSize: 16)),
+        label: Text(_l10n.localGameRollDice, style: const TextStyle(fontSize: 16)),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.brown[700],
           foregroundColor: Colors.white,
@@ -673,7 +676,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
               side: BorderSide(color: Colors.brown[400]!),
               minimumSize: const Size(64, 40),
             ),
-            child: const Text('Undo'),
+            child: Text(_l10n.moveUndo),
           ),
         ],
         if (_canSubmit) ...[
@@ -685,7 +688,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
               foregroundColor: Colors.white,
               minimumSize: const Size(72, 40),
             ),
-            child: const Text('Done'),
+            child: Text(_l10n.moveDone),
           ),
         ],
       ],
@@ -713,7 +716,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
             ),
             const SizedBox(width: 6),
             Text(
-              'Opponent is playing…',
+              _l10n.opponentPlaying,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.brown[600],

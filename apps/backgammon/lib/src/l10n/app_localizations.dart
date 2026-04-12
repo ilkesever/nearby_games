@@ -291,6 +291,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Black'**
   String get scoreBlack;
+
+  /// Prompt shown to the active player during opening roll
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn — tap to roll'**
+  String get openingRollYourTurn;
+
+  /// Status shown when black needs to roll
+  ///
+  /// In en, this message translates to:
+  /// **'Black to roll…'**
+  String get openingRollBlackToRoll;
+
+  /// Status shown when white needs to roll
+  ///
+  /// In en, this message translates to:
+  /// **'White to roll…'**
+  String get openingRollWhiteToRoll;
+
+  /// Instruction when neither player has rolled yet and it is your turn
+  ///
+  /// In en, this message translates to:
+  /// **'Tap your die to roll'**
+  String get openingRollTapToRoll;
+
+  /// Status when waiting for the remote opponent to roll
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for opponent…'**
+  String get openingRollWaitingForOpponent;
+
+  /// Label for the bore-off row
+  ///
+  /// In en, this message translates to:
+  /// **'{color} bore off: '**
+  String boreOffLabel(String color);
+
+  /// Button to undo the last checker move
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get moveUndo;
+
+  /// Button to confirm and submit the current turn
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get moveDone;
+
+  /// Status shown while watching the opponent make moves
+  ///
+  /// In en, this message translates to:
+  /// **'Opponent is playing…'**
+  String get opponentPlaying;
 }
 
 class _AppLocalizationsDelegate

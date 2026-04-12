@@ -120,5 +120,46 @@
   "scoreBlack": "Black",
   "@scoreBlack": {
     "description": "Label for black player score"
+  },
+  "openingRollYourTurn": "Your turn — tap to roll",
+  "@openingRollYourTurn": {
+    "description": "Prompt shown to the active player during opening roll"
+  },
+  "openingRollBlackToRoll": "Black to roll…",
+  "@openingRollBlackToRoll": {
+    "description": "Status shown when black needs to roll"
+  },
+  "openingRollWhiteToRoll": "White to roll…",
+  "@openingRollWhiteToRoll": {
+    "description": "Status shown when white needs to roll"
+  },
+  "openingRollTapToRoll": "Tap your die to roll",
+  "@openingRollTapToRoll": {
+    "description": "Instruction when neither player has rolled yet and it is your turn"
+  },
+  "openingRollWaitingForOpponent": "Waiting for opponent…",
+  "@openingRollWaitingForOpponent": {
+    "description": "Status when waiting for the remote opponent to roll"
+  },
+  "boreOffLabel": "{color} bore off: ",
+  "@boreOffLabel": {
+    "description": "Label for the bore-off row",
+    "placeholders": {
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "moveUndo": "Undo",
+  "@moveUndo": {
+    "description": "Button to undo the last checker move"
+  },
+  "moveDone": "Done",
+  "@moveDone": {
+    "description": "Button to confirm and submit the current turn"
+  },
+  "opponentPlaying": "Opponent is playing…",
+  "@opponentPlaying": {
+    "description": "Status shown while watching the opponent make moves"
   }
 }

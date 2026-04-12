@@ -1,0 +1,4 @@
+• Version initiale
+• Multijoueur Bluetooth — sans internet
+• Mode local Pass & Play
+• 12 langues : arabe, bengali, chinois, anglais, français, allemand, hindi, indonésien, portugais, russe, espagnol, turc

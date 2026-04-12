@@ -1,0 +1,11 @@
+Yakın Tavla, Bluetooth üzerinden internet bağlantısı olmadan çevrenizdekilere klasik bir tavla oyunu meydan okumanızı sağlar.
+
+Uygulamayı açın, yakınlardaki oyuncuları keşfedin ve saniyeler içinde bir maç başlatın. Zarları atın, pullarınızı hareket ettirin ve her yerde yüz yüze tavla oynayın.
+
+Özellikler:
+• Bluetooth ile yakındaki oyuncularla oynayın
+• İnternet bağlantısı gerekmez
+• Güzel tahta ile klasik tavla kuralları
+• Tek cihazda iki oyuncu için Sırayla Oyna modu
+• Hızlı ve kolay eşleştirme
+• Her yerde çalışır — kafeler, parklar, seyahat

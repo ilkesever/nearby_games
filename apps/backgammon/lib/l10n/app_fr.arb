@@ -28,5 +28,14 @@
   "openingRollTie": "Égalité ! Relancez",
   "openingRollGoesFirst": "{color} commence !",
   "scoreWhite": "Blanc",
-  "scoreBlack": "Noir"
+  "scoreBlack": "Noir",
+  "openingRollYourTurn": "Votre tour — appuyez pour lancer",
+  "openingRollBlackToRoll": "Noir lance…",
+  "openingRollWhiteToRoll": "Blanc lance…",
+  "openingRollTapToRoll": "Appuyez sur votre dé pour lancer",
+  "openingRollWaitingForOpponent": "En attente de l'adversaire…",
+  "boreOffLabel": "{color} sortis : ",
+  "moveUndo": "Annuler",
+  "moveDone": "Valider",
+  "opponentPlaying": "L'adversaire joue…"
 }

@@ -98,4 +98,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Чёрные';
+
+  @override
+  String get openingRollYourTurn => 'Ваш ход — нажмите, чтобы бросить';
+
+  @override
+  String get openingRollBlackToRoll => 'Чёрные бросают…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Белые бросают…';
+
+  @override
+  String get openingRollTapToRoll => 'Нажмите на кубик, чтобы бросить';
+
+  @override
+  String get openingRollWaitingForOpponent => 'Ожидание противника…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color выведены: ';
+  }
+
+  @override
+  String get moveUndo => 'Отменить';
+
+  @override
+  String get moveDone => 'Готово';
+
+  @override
+  String get opponentPlaying => 'Противник играет…';
 }

@@ -98,4 +98,33 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Negras';
+
+  @override
+  String get openingRollYourTurn => 'Tu turno — toca para lanzar';
+
+  @override
+  String get openingRollBlackToRoll => 'Negras por lanzar…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Blancas por lanzar…';
+
+  @override
+  String get openingRollTapToRoll => 'Toca tu dado para lanzar';
+
+  @override
+  String get openingRollWaitingForOpponent => 'Esperando al oponente…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color sacadas: ';
+  }
+
+  @override
+  String get moveUndo => 'Deshacer';
+
+  @override
+  String get moveDone => 'Listo';
+
+  @override
+  String get opponentPlaying => 'El oponente está jugando…';
 }

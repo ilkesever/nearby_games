@@ -1,4 +1,3 @@
-• İlk sürüm
-• Bluetooth çok oyunculu — internet gerekmez
-• Yerel Geçir & Oyna modu
-• 12 dil: Arapça, Bengalce, Çince, İngilizce, Fransızca, Almanca, Hintçe, Endonezce, Portekizce, Rusça, İspanyolca, Türkçe
+• Hindi ve Bengalce için eksik çeviriler düzeltildi
+• Açılış zarı, taş çıkarma ve aksiyon butonları dahil tüm oyun içi metinler yerelleştirildi
+• Hata düzeltmeleri ve iyileştirmeler

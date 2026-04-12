@@ -98,4 +98,33 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Hitam';
+
+  @override
+  String get openingRollYourTurn => 'Giliran Anda — ketuk untuk melempar';
+
+  @override
+  String get openingRollBlackToRoll => 'Hitam melempar…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Putih melempar…';
+
+  @override
+  String get openingRollTapToRoll => 'Ketuk dadu Anda untuk melempar';
+
+  @override
+  String get openingRollWaitingForOpponent => 'Menunggu lawan…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color keluar: ';
+  }
+
+  @override
+  String get moveUndo => 'Urungkan';
+
+  @override
+  String get moveDone => 'Selesai';
+
+  @override
+  String get opponentPlaying => 'Lawan sedang bermain…';
 }

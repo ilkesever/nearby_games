@@ -1,0 +1,1 @@
+Backgammon mit nahegelegenen Spielern über Bluetooth spielen. Kein Internet!

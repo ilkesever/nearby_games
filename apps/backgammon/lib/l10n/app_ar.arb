@@ -28,5 +28,14 @@
   "openingRollTie": "تعادل! ارمِ مجدداً",
   "openingRollGoesFirst": "{color} يبدأ أولاً!",
   "scoreWhite": "الأبيض",
-  "scoreBlack": "الأسود"
+  "scoreBlack": "الأسود",
+  "openingRollYourTurn": "دورك — اضغط لرمي النرد",
+  "openingRollBlackToRoll": "دور الأسود للرمي…",
+  "openingRollWhiteToRoll": "دور الأبيض للرمي…",
+  "openingRollTapToRoll": "اضغط على نردك لرمي",
+  "openingRollWaitingForOpponent": "بانتظار الخصم…",
+  "boreOffLabel": "{color} أخرج: ",
+  "moveUndo": "تراجع",
+  "moveDone": "تم",
+  "opponentPlaying": "الخصم يلعب…"
 }

@@ -1,4 +1,3 @@
-• Erstveröffentlichung
-• Bluetooth-Mehrspieler — kein Internet erforderlich
-• Weitergabe-Modus für lokales Spiel
-• 12 Sprachen: Arabisch, Bengalisch, Chinesisch, Englisch, Französisch, Deutsch, Hindi, Indonesisch, Portugiesisch, Russisch, Spanisch, Türkisch
+• Fehlende Übersetzungen für Hindi und Bengali behoben
+• Alle Spieltexte lokalisiert, einschließlich Anfangswurf, Auswürfeln und Aktionsschaltflächen
+• Fehlerbehebungen und Verbesserungen

@@ -1,0 +1,11 @@
+Backgammon Proche vous permet de défier vos amis et les joueurs autour de vous à une partie de backgammon classique via Bluetooth — sans connexion internet.
+
+Ouvrez simplement l'application, découvrez les joueurs à proximité et commencez une partie en quelques secondes. Lancez les dés, déplacez vos pions et profitez du backgammon en face à face.
+
+Fonctionnalités :
+• Jouez via Bluetooth avec des joueurs proches
+• Aucune connexion internet requise
+• Règles classiques avec un magnifique plateau
+• Mode Pass & Play pour deux joueurs sur un appareil
+• Mise en relation rapide et facile
+• Fonctionne partout — cafés, parcs, voyages

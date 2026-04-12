@@ -50,6 +50,14 @@ Build and upload IPA to App Store Connect
 
 Upload localized App Store metadata (name, subtitle, description, keywords, etc.)
 
+### ios upload_screenshots
+
+```sh
+[bundle exec] fastlane ios upload_screenshots
+```
+
+Upload App Store screenshots
+
 ----
 
 

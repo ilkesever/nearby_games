@@ -28,5 +28,14 @@
   "openingRollTie": "Beraberlik! Tekrar at",
   "openingRollGoesFirst": "{color} önce başlar!",
   "scoreWhite": "Beyaz",
-  "scoreBlack": "Siyah"
+  "scoreBlack": "Siyah",
+  "openingRollYourTurn": "Sıra sende — atmak için dokun",
+  "openingRollBlackToRoll": "Siyah atıyor…",
+  "openingRollWhiteToRoll": "Beyaz atıyor…",
+  "openingRollTapToRoll": "Atmak için zarına dokun",
+  "openingRollWaitingForOpponent": "Rakip bekleniyor…",
+  "boreOffLabel": "{color} çıkarılan: ",
+  "moveUndo": "Geri Al",
+  "moveDone": "Tamam",
+  "opponentPlaying": "Rakip oynuyor…"
 }

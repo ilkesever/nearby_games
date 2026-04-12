@@ -28,5 +28,14 @@
   "openingRollTie": "Empate! Lance novamente",
   "openingRollGoesFirst": "{color} vai primeiro!",
   "scoreWhite": "Brancas",
-  "scoreBlack": "Pretas"
+  "scoreBlack": "Pretas",
+  "openingRollYourTurn": "Sua vez — toque para lançar",
+  "openingRollBlackToRoll": "Pretas lançam…",
+  "openingRollWhiteToRoll": "Brancas lançam…",
+  "openingRollTapToRoll": "Toque no seu dado para lançar",
+  "openingRollWaitingForOpponent": "Aguardando oponente…",
+  "boreOffLabel": "{color} retiradas: ",
+  "moveUndo": "Desfazer",
+  "moveDone": "Confirmar",
+  "opponentPlaying": "Oponente está jogando…"
 }

@@ -1,4 +1,3 @@
-• Rilis pertama
-• Multipemain Bluetooth — tanpa internet
-• Mode bermain lokal lempar-main
-• 12 bahasa: Arab, Bengali, Cina, Inggris, Prancis, Jerman, Hindi, Indonesia, Portugis, Rusia, Spanyol, Turki
+• Perbaikan terjemahan yang hilang untuk Hindi dan Bengali
+• Lokalisasi semua teks dalam game termasuk lemparan awal, pion keluar, dan tombol aksi
+• Perbaikan bug dan peningkatan

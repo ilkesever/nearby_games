@@ -28,5 +28,14 @@
   "openingRollTie": "平局！重新掷骰",
   "openingRollGoesFirst": "{color}先行！",
   "scoreWhite": "白棋",
-  "scoreBlack": "黑棋"
+  "scoreBlack": "黑棋",
+  "openingRollYourTurn": "轮到你了 — 点击掷骰",
+  "openingRollBlackToRoll": "黑棋掷骰中…",
+  "openingRollWhiteToRoll": "白棋掷骰中…",
+  "openingRollTapToRoll": "点击你的骰子来掷",
+  "openingRollWaitingForOpponent": "等待对手…",
+  "boreOffLabel": "{color}已退出: ",
+  "moveUndo": "撤销",
+  "moveDone": "确定",
+  "opponentPlaying": "对手正在操作…"
 }

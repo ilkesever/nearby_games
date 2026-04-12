@@ -1,0 +1,1 @@
+Main backgammon dengan pemain terdekat via Bluetooth!

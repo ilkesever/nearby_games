@@ -96,4 +96,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scoreBlack => '黑棋';
+
+  @override
+  String get openingRollYourTurn => '轮到你了 — 点击掷骰';
+
+  @override
+  String get openingRollBlackToRoll => '黑棋掷骰中…';
+
+  @override
+  String get openingRollWhiteToRoll => '白棋掷骰中…';
+
+  @override
+  String get openingRollTapToRoll => '点击你的骰子来掷';
+
+  @override
+  String get openingRollWaitingForOpponent => '等待对手…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color已退出: ';
+  }
+
+  @override
+  String get moveUndo => '撤销';
+
+  @override
+  String get moveDone => '确定';
+
+  @override
+  String get opponentPlaying => '对手正在操作…';
 }

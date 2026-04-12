@@ -98,4 +98,33 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get scoreBlack => 'Siyah';
+
+  @override
+  String get openingRollYourTurn => 'Sıra sende — atmak için dokun';
+
+  @override
+  String get openingRollBlackToRoll => 'Siyah atıyor…';
+
+  @override
+  String get openingRollWhiteToRoll => 'Beyaz atıyor…';
+
+  @override
+  String get openingRollTapToRoll => 'Atmak için zarına dokun';
+
+  @override
+  String get openingRollWaitingForOpponent => 'Rakip bekleniyor…';
+
+  @override
+  String boreOffLabel(String color) {
+    return '$color çıkarılan: ';
+  }
+
+  @override
+  String get moveUndo => 'Geri Al';
+
+  @override
+  String get moveDone => 'Tamam';
+
+  @override
+  String get opponentPlaying => 'Rakip oynuyor…';
 }
