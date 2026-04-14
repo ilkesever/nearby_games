@@ -42,7 +42,7 @@ class CheckersEngine extends GameEngine<CheckersState, CheckersMove> {
   List<CheckersMove> getValidMoves(CheckersState state) {
     return state.draughts
         .moves()
-        .map((m) => CheckersMove(from: m.from, to: m.to, jumps: m.jumps))
+        .map((m) => CheckersMove(from: m.from, to: m.to, jumps: m.jumps, isCapture: m.takes.isNotEmpty))
         .toList();
   }
 
@@ -50,7 +50,7 @@ class CheckersEngine extends GameEngine<CheckersState, CheckersMove> {
   List<CheckersMove> getMovesFromSquare(CheckersState state, int square) {
     return state.draughts
         .moves(square)
-        .map((m) => CheckersMove(from: m.from, to: m.to, jumps: m.jumps))
+        .map((m) => CheckersMove(from: m.from, to: m.to, jumps: m.jumps, isCapture: m.takes.isNotEmpty))
         .toList();
   }
 

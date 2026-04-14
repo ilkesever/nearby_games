@@ -12,10 +12,14 @@ class CheckersMove {
   /// Used by the UI for step-by-step path display; the engine only needs from/to.
   final List<int> jumps;
 
+  /// True if this move captures one or more opponent pieces.
+  final bool isCapture;
+
   CheckersMove({
     required this.from,
     required this.to,
     List<int>? jumps,
+    this.isCapture = false,
   }) : jumps = jumps ?? [from, to];
 
   /// True if this move involves more than one jump (multi-jump capture).

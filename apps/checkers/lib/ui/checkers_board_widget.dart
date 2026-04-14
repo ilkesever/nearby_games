@@ -163,6 +163,12 @@ class _CheckersBoardWidgetState extends State<CheckersBoardWidget> {
       aspectRatio: 1,
       child: LayoutBuilder(builder: (context, constraints) {
         final cellSize = constraints.maxWidth / 10;
+        final allMoves = widget.engine.getValidMoves(widget.state);
+        final mustCaptureSquares = allMoves
+            .where((m) => m.isCapture)
+            .map((m) => m.from)
+            .toSet();
+
         return GestureDetector(
           onTapDown: (d) => _onTap(d.localPosition, cellSize),
           child: CustomPaint(
@@ -174,6 +180,7 @@ class _CheckersBoardWidgetState extends State<CheckersBoardWidget> {
               selectedSquare: _selectedSquare,
               validNextSquares: _validNextSquares,
               partialPath: _partialPath,
+              mustCaptureSquares: mustCaptureSquares,
             ),
           ),
         );
@@ -193,6 +200,7 @@ class _BoardPainter extends CustomPainter {
   final int? selectedSquare;
   final Set<int> validNextSquares;
   final List<int> partialPath;
+  final Set<int> mustCaptureSquares;
 
   static const Color _lightSquare = Color(0xFFF0D9B5);
   static const Color _darkSquare = Color(0xFF8B4513);
@@ -204,6 +212,7 @@ class _BoardPainter extends CustomPainter {
   static const Color _blackPiece = Color(0xFF1A1A1A);
   static const Color _pieceBorder = Color(0xFF555555);
   static const Color _kingRing = Color(0xFFFFD700);
+  static const Color _mustCaptureRing = Color(0xFFFF6B35);
 
   _BoardPainter({
     required this.state,
@@ -212,6 +221,7 @@ class _BoardPainter extends CustomPainter {
     required this.selectedSquare,
     required this.validNextSquares,
     required this.partialPath,
+    required this.mustCaptureSquares,
   });
 
   @override
@@ -313,6 +323,15 @@ class _BoardPainter extends CustomPainter {
           ..strokeWidth = 2.5;
         canvas.drawCircle(center, radius * 0.55, kingPaint);
       }
+
+      // Must-capture indicator: orange outer ring
+      if (mustCaptureSquares.contains(sq)) {
+        final capturePaint = Paint()
+          ..color = _mustCaptureRing
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0;
+        canvas.drawCircle(center, radius + 4, capturePaint);
+      }
     }
   }
 
@@ -334,5 +353,6 @@ class _BoardPainter extends CustomPainter {
       old.state != state ||
       old.selectedSquare != selectedSquare ||
       old.validNextSquares != validNextSquares ||
-      old.partialPath != partialPath;
+      old.partialPath != partialPath ||
+      old.mustCaptureSquares != mustCaptureSquares;
 }
