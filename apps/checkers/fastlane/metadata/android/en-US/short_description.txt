@@ -1,0 +1,1 @@
+Play checkers with nearby players over Bluetooth. No internet required.

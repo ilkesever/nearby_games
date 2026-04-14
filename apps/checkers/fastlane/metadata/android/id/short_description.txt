@@ -1,0 +1,1 @@
+Main dam dengan pemain terdekat via Bluetooth. Tanpa internet.

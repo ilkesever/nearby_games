@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:game_framework/game_framework.dart';
 import 'package:nearby_ble/nearby_ble.dart';
 
-import '../game/backgammon_engine.dart';
-import '../game/backgammon_move.dart';
-import '../game/backgammon_state.dart';
+import '../game/checkers_engine.dart';
+import '../game/checkers_move.dart';
+import '../game/checkers_state.dart';
 import '../services/rating_service.dart';
 import '../src/l10n/app_localizations.dart';
-import 'backgammon_board_widget.dart';
+import 'checkers_board_widget.dart';
 
-class BackgammonGameScreen extends StatefulWidget {
+class CheckersGameScreen extends StatefulWidget {
   final BleService bleService;
   final BleConnection connection;
   final bool isHost;
   final String playerName;
 
-  const BackgammonGameScreen({
+  const CheckersGameScreen({
     super.key,
     required this.bleService,
     required this.connection,
@@ -24,25 +24,22 @@ class BackgammonGameScreen extends StatefulWidget {
   });
 
   @override
-  State<BackgammonGameScreen> createState() => _BackgammonGameScreenState();
+  State<CheckersGameScreen> createState() => _CheckersGameScreenState();
 }
 
-class _BackgammonGameScreenState extends State<BackgammonGameScreen> {
-  late final BackgammonEngine _engine;
-  late final GameSession<BackgammonState, BackgammonMove> _session;
-  BackgammonMove? _lastMove;
-  OpponentPreview? _opponentPreview;
+class _CheckersGameScreenState extends State<CheckersGameScreen> {
+  late final CheckersEngine _engine;
+  late final GameSession<CheckersState, CheckersMove> _session;
 
-  // Match-level score (persists for the duration of this BLE session)
+  // Match-level score (persists for the BLE session)
   int _whiteScore = 0;
   int _blackScore = 0;
-  BackgammonColor? _lastWinner;
 
   @override
   void initState() {
     super.initState();
-    _engine = BackgammonEngine();
-    _session = GameSession<BackgammonState, BackgammonMove>(
+    _engine = CheckersEngine();
+    _session = GameSession<CheckersState, CheckersMove>(
       engine: _engine,
       bleService: widget.bleService,
     );
@@ -53,41 +50,17 @@ class _BackgammonGameScreenState extends State<BackgammonGameScreen> {
       remoteName: widget.connection.remoteDevice.name,
     );
 
-    _session.moveStream.listen((move) {
-      setState(() {
-        _lastMove = move;
-        _opponentPreview = null;
-      });
-    });
-
-    _session.customStream.listen((payload) {
-      if (payload['action'] != 'preview') return;
-      final dice = List<int>.from(payload['dice'] as List? ?? []);
-      final moves = (payload['moves'] as List? ?? [])
-          .map((m) =>
-              CheckerMove.fromMap(Map<String, dynamic>.from(m as Map)))
-          .toList();
-      setState(() {
-        _opponentPreview = dice.isEmpty
-            ? null
-            : OpponentPreview(dice: dice, moves: moves);
-      });
-    });
-
     _session.statusStream.listen((status) {
       if (status != GameSessionStatus.gameOver) return;
       RatingService().recordGameCompleted();
-      final state = _session.state;
-      final winner = state.winner;
-      if (winner != null) {
-        final points = _pointsForWin(state.winType);
+      final winner = _session.state.winnerIndex;
+      if (winner != null && mounted) {
         setState(() {
-          if (winner == BackgammonColor.white) {
-            _whiteScore += points;
+          if (winner == 0) {
+            _whiteScore++;
           } else {
-            _blackScore += points;
+            _blackScore++;
           }
-          _lastWinner = winner;
         });
       }
     });
@@ -109,32 +82,12 @@ class _BackgammonGameScreenState extends State<BackgammonGameScreen> {
 
   @override
   void dispose() {
-    widget.bleService.reset(); // fire-and-forget: stop native BLE before leaving
+    widget.bleService.reset();
     _session.dispose();
     super.dispose();
   }
 
-  int _pointsForWin(BackgammonWinType? type) {
-    switch (type) {
-      case BackgammonWinType.gammon:
-        return 2;
-      case BackgammonWinType.backgammon:
-        return 3;
-      default:
-        return 1;
-    }
-  }
-
-  void _onMove(BackgammonMove move) {
-    _session.makeMove(move);
-  }
-
-  void _startNextGame() {
-    if (_lastWinner == null) return;
-    _session.rematch(
-      initialState: BackgammonState.initial(startingColor: _lastWinner!),
-    );
-  }
+  void _onMove(CheckersMove move) => _session.makeMove(move);
 
   void _showDrawOfferDialog() {
     final l10n = AppLocalizations.of(context);
@@ -166,7 +119,7 @@ class _BackgammonGameScreenState extends State<BackgammonGameScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return GameScaffold<BackgammonState, BackgammonMove>(
+    return GameScaffold<CheckersState, CheckersMove>(
       session: _session,
       gameName: l10n.appTitle,
       accentColor: Colors.brown[700],
@@ -175,36 +128,26 @@ class _BackgammonGameScreenState extends State<BackgammonGameScreen> {
       gameBoard: ListenableBuilder(
         listenable: _session,
         builder: (context, _) {
-          final isBlack =
-              _session.localPlayer?.side == PlayerSide.player1;
           return Column(
             children: [
+              _buildCapturedBar(_session.state),
               Expanded(
-                child: BackgammonBoardWidget(
-                  state: _session.state,
-                  engine: _engine,
-                  interactive: _session.isMyTurn && _session.isPlaying,
-                  flipped: isBlack,
-                  lastMove: _lastMove,
-                  onMove: _onMove,
-                  opponentPreview: _opponentPreview,
-                  localColor: isBlack
-                      ? BackgammonColor.black
-                      : BackgammonColor.white,
-                  onPreviewChanged: (dice, moves) {
-                    _session.sendCustom({
-                      'action': 'preview',
-                      'dice': dice,
-                      'moves': moves.map((m) => m.toMap()).toList(),
-                    });
-                  },
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: CheckersBoardWidget(
+                    state: _session.state,
+                    engine: _engine,
+                    interactive:
+                        _session.isMyTurn && _session.isPlaying,
+                    onMove: _onMove,
+                  ),
                 ),
               ),
               if (_session.status == GameSessionStatus.gameOver)
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: ElevatedButton.icon(
-                    onPressed: _startNextGame,
+                    onPressed: () => _session.rematch(),
                     icon: const Icon(Icons.replay),
                     label: Text(l10n.localGamePlayAgain),
                     style: ElevatedButton.styleFrom(
@@ -218,6 +161,41 @@ class _BackgammonGameScreenState extends State<BackgammonGameScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildCapturedBar(CheckersState state) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+      color: Colors.brown[850],
+      child: Row(
+        children: [
+          _buildCapturedChip(state.blackCaptured, Colors.grey[850]!),
+          const Spacer(),
+          _buildCapturedChip(state.whiteCaptured, Colors.white,
+              reversed: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCapturedChip(int count, Color color, {bool reversed = false}) {
+    final circles = List.generate(
+      count,
+      (_) => Container(
+        width: 14,
+        height: 14,
+        margin: const EdgeInsets.only(right: 2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          border: Border.all(color: Colors.brown[400]!, width: 1),
+        ),
+      ),
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: reversed ? circles.reversed.toList() : circles,
     );
   }
 

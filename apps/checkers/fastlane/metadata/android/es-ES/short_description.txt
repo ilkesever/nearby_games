@@ -1,0 +1,1 @@
+Juega a las damas con jugadores cercanos por Bluetooth. Sin internet.

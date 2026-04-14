@@ -22,6 +22,9 @@ class BackgammonBoardWidget extends StatefulWidget {
   final void Function(BackgammonMove)? onMove;
   final void Function(List<int> dice, List<CheckerMove> moves)? onPreviewChanged;
   final OpponentPreview? opponentPreview;
+  // When set, bar checkers for this color pulse with a gold ring on the
+  // player's turn. Pass null for pass-and-play (no focused pulse).
+  final BackgammonColor? localColor;
 
   const BackgammonBoardWidget({
     super.key,
@@ -33,6 +36,7 @@ class BackgammonBoardWidget extends StatefulWidget {
     this.onMove,
     this.onPreviewChanged,
     this.opponentPreview,
+    this.localColor,
   });
 
   @override
@@ -40,7 +44,8 @@ class BackgammonBoardWidget extends StatefulWidget {
       _BackgammonBoardWidgetState();
 }
 
-class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
+class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget>
+    with SingleTickerProviderStateMixin {
   AppLocalizations get _l10n => AppLocalizations.of(context);
 
   List<int> _rolledDice = [];
@@ -56,10 +61,20 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
   // Opening roll: die rolled locally but not yet submitted to engine
   int? _localOpeningDie;
 
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
   @override
   void initState() {
     super.initState();
     _currentBoardState = widget.state;
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _pulseAnimation = _pulseController;
+    _pulseController.addListener(() => setState(() {}));
+    _syncPulseAnimation();
   }
 
   @override
@@ -67,6 +82,36 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     super.didUpdateWidget(old);
     if (old.state != widget.state) {
       _resetLocalState();
+    }
+    _syncPulseAnimation();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _syncPulseAnimation() {
+    if (!widget.interactive) {
+      _pulseController.stop();
+      _pulseController.value = 0.0;
+      return;
+    }
+    // BLE game: pulse the local player's bar checkers.
+    // Pass-and-play (localColor == null): pulse whoever is active.
+    final effectiveColor =
+        widget.localColor ?? _currentBoardState.activeColor;
+    final hasBar = effectiveColor == BackgammonColor.white
+        ? _currentBoardState.whiteBar > 0
+        : _currentBoardState.blackBar > 0;
+    if (hasBar) {
+      if (!_pulseController.isAnimating) {
+        _pulseController.repeat(reverse: true);
+      }
+    } else {
+      _pulseController.stop();
+      _pulseController.value = 0.0;
     }
   }
 
@@ -79,6 +124,7 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
     _combinedMoveMap = {};
     _currentBoardState = widget.state;
     _localOpeningDie = null;
+    _syncPulseAnimation();
   }
 
   List<int> get _remainingDice {
@@ -555,6 +601,8 @@ class _BackgammonBoardWidgetState extends State<BackgammonBoardWidget> {
                     combinedDests: _combinedMoveMap.keys.toSet(),
                     lastMove: widget.lastMove,
                     opponentPreview: widget.opponentPreview,
+                    pulseValue: _pulseAnimation.value,
+                    localColor: widget.localColor,
                   ),
                   child: const SizedBox.expand(),
                 ),
@@ -800,13 +848,17 @@ class _BoardPainter extends CustomPainter {
   final Set<int> combinedDests;
   final BackgammonMove? lastMove;
   final OpponentPreview? opponentPreview;
+  final double pulseValue;
+  final BackgammonColor? localColor;
 
-  const _BoardPainter({
+  _BoardPainter({
     required this.state,
     required this.flipped,
     required this.selectedPoint,
     required this.validDests,
     required this.combinedDests,
+    required this.pulseValue,
+    required this.localColor,
     this.lastMove,
     this.opponentPreview,
   });
@@ -970,7 +1022,7 @@ class _BoardPainter extends CustomPainter {
     final barCx = w / 2;
     final r = w / 26;
 
-    void drawBar(int count, BackgammonColor color, bool top) {
+    void drawBar(int count, BackgammonColor color, bool top, {required bool pulse}) {
       if (count == 0) return;
       final idealSpacing = r * 2.1;
       final maxSpacing = count > 1
@@ -981,16 +1033,22 @@ class _BoardPainter extends CustomPainter {
         final dy = top
             ? h * 0.1 + r + i * spacing
             : h * 0.9 - r - i * spacing;
-        _drawChecker(canvas, Offset(barCx, dy), r, color);
+        _drawChecker(canvas, Offset(barCx, dy), r, color,
+            pulseRing: pulse ? pulseValue : null);
       }
     }
 
-    drawBar(state.whiteBar, BackgammonColor.white, !flipped);
-    drawBar(state.blackBar, BackgammonColor.black, flipped);
+    // BLE game: pulse the local player's side. Pass-and-play: pulse active player.
+    final effectiveColor = localColor ?? state.activeColor;
+    drawBar(state.whiteBar, BackgammonColor.white, !flipped,
+        pulse: effectiveColor == BackgammonColor.white);
+    drawBar(state.blackBar, BackgammonColor.black, flipped,
+        pulse: effectiveColor == BackgammonColor.black);
   }
 
   void _drawChecker(
-      Canvas canvas, Offset center, double radius, BackgammonColor color) {
+      Canvas canvas, Offset center, double radius, BackgammonColor color,
+      {double? pulseRing}) {
     final isWhite = color == BackgammonColor.white;
     canvas.drawCircle(
       center,
@@ -1014,6 +1072,19 @@ class _BoardPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
+    if (pulseRing != null) {
+      final ringRadius = radius * 1.15 + pulseRing * radius * 0.40;
+      final opacity = (0.75 * math.sin(pulseRing * math.pi)).clamp(0.0, 1.0);
+      canvas.drawCircle(
+        center,
+        ringRadius,
+        Paint()
+          ..color = const Color(0xFFFFD700).withValues(alpha: opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = radius * 0.18
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0),
+      );
+    }
   }
 
   @override
@@ -1023,7 +1094,9 @@ class _BoardPainter extends CustomPainter {
       old.validDests != validDests ||
       old.combinedDests != combinedDests ||
       old.flipped != flipped ||
-      old.lastMove != lastMove;
+      old.lastMove != lastMove ||
+      old.pulseValue != pulseValue ||
+      old.localColor != localColor;
 }
 
 // ---------------------------------------------------------------------------

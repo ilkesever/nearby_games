@@ -1,0 +1,11 @@
+Nearby Checkers lets you challenge friends and players around you to a classic game of checkers (international 10×10 draughts) over Bluetooth — no internet required.
+
+Simply open the app, discover nearby players, and start a match in seconds. Move your pieces, jump your opponent's, and enjoy the timeless strategy of checkers face-to-face with anyone around you.
+
+Features:
+• Play checkers with nearby players via Bluetooth
+• No internet connection required
+• International draughts rules with a beautiful 10×10 board
+• Pass & Play mode for two players on one device
+• Fast and easy matchmaking
+• Works anywhere — cafes, parks, travel

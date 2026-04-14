@@ -1,0 +1,1 @@
+checkers,draughts,bluetooth,board game,offline,nearby,friends,strategy,multiplayer,classic

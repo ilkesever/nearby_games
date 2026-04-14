@@ -1,0 +1,11 @@
+Nearby Checkers vous permet de défier des amis et des joueurs proches à une partie de jeu de dames classique (règles internationales 10×10) via Bluetooth — sans connexion internet.
+
+Ouvrez simplement l'application, découvrez les joueurs proches et commencez une partie en quelques secondes. Déplacez vos pions, sautez ceux de votre adversaire et savourez la stratégie intemporelle du jeu de dames face à face avec n'importe qui autour de vous.
+
+Fonctionnalités :
+• Jouez aux dames avec des joueurs proches via Bluetooth
+• Aucune connexion internet requise
+• Règles internationales des dames sur un beau plateau 10×10
+• Mode Passer & Jouer pour deux joueurs sur un seul appareil
+• Matchmaking rapide et facile
+• Fonctionne partout — cafés, parcs, voyages

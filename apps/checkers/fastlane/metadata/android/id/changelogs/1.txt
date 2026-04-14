@@ -1,0 +1,4 @@
+• Rilis pertama
+• Multipemain Bluetooth — tanpa internet
+• Mode Oper & Main lokal
+• 12 bahasa: Arab, Bengali, Tionghoa, Inggris, Prancis, Jerman, Hindi, Indonesia, Portugis, Rusia, Spanyol, Turki

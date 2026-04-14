@@ -1,0 +1,11 @@
+Nearby Checkers te permite retar a amigos y jugadores cercanos a una partida clásica de damas (reglas internacionales 10×10) vía Bluetooth — sin necesidad de internet.
+
+Simplemente abre la app, descubre jugadores cercanos e inicia una partida en segundos. Mueve tus fichas, salta las del adversario y disfruta de la eterna estrategia de las damas cara a cara con quien tengas al lado.
+
+Características:
+• Juega a las damas con jugadores cercanos por Bluetooth
+• Sin conexión a internet
+• Reglas internacionales de damas en un hermoso tablero 10×10
+• Modo Pasar & Jugar para dos jugadores en un mismo dispositivo
+• Emparejamiento rápido y sencillo
+• Funciona en cualquier lugar — cafeterías, parques, viajes

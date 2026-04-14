@@ -1,0 +1,4 @@
+• İlk sürüm
+• Bluetooth çok oyunculu — internet gerektirmez
+• Yerel Geç & Oyna modu
+• 12 dil: Arapça, Bengalce, Çince, İngilizce, Fransızca, Almanca, Hintçe, Endonezyaca, Portekizce, Rusça, İspanyolca, Türkçe

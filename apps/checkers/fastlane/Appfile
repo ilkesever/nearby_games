@@ -1,0 +1,7 @@
+# iOS
+app_identifier "com.nearbygames.checkers"
+apple_id "severilke@gmail.com"
+
+# Android
+json_key_file "fastlane/google-play-key.json"
+package_name "com.nearbygames.checkers"

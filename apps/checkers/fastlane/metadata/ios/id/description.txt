@@ -1,0 +1,11 @@
+Nearby Checkers memungkinkan Anda menantang teman dan pemain di sekitar Anda dalam permainan dam klasik (aturan internasional 10×10) melalui Bluetooth — tanpa internet.
+
+Cukup buka aplikasi, temukan pemain terdekat, dan mulai pertandingan dalam hitungan detik. Gerakkan bidak Anda, lompati bidak lawan, dan nikmati strategi dam yang tak lekang oleh waktu secara tatap muka dengan siapa pun di sekitar Anda.
+
+Fitur:
+• Main dam dengan pemain terdekat via Bluetooth
+• Tidak memerlukan koneksi internet
+• Aturan dam internasional dengan papan 10×10 yang indah
+• Mode Oper & Main untuk dua pemain di satu perangkat
+• Pencarian lawan yang cepat dan mudah
+• Bisa dimainkan di mana saja — kafe, taman, perjalanan
