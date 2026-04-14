@@ -30,6 +30,12 @@ platform :ios do
   lane :release do
     api_key = asc_api_key
 
+    # Read version/build from pubspec.yaml so xcodebuild always uses the right values
+    require 'yaml'
+    pubspec = YAML.load_file('../pubspec.yaml')
+    version_string = pubspec['version']           # e.g. "1.0.0+2"
+    version_name, build_number = version_string.split('+')
+
     # Ensure a valid Apple Distribution certificate exists in the keychain
     cert(api_key: api_key)
 
@@ -40,10 +46,21 @@ platform :ios do
       force: true
     )
 
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/Runner.xcodeproj",
+      team_id: "KA6YWVZ5MM",
+      bundle_identifier: "com.nearbygames.checkers",
+      code_sign_identity: "iPhone Distribution",
+      profile_uuid: ENV["SIGH_UUID"]
+    )
+
     build_app(
       workspace: "ios/Runner.xcworkspace",
       scheme: "Runner",
-      export_method: "app-store"
+      export_method: "app-store",
+      # Pass version explicitly to override any cached derived-data values
+      xcargs: "FLUTTER_BUILD_NAME=#{version_name} FLUTTER_BUILD_NUMBER=#{build_number} CURRENT_PROJECT_VERSION=#{build_number} MARKETING_VERSION=#{version_name}"
     )
     upload_to_app_store(
       skip_metadata: true,
